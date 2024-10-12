@@ -8,26 +8,137 @@ import org.rowlandhall.meepmeep.roadrunner.DefaultBotBuilder;
 import org.rowlandhall.meepmeep.roadrunner.entity.RoadRunnerBotEntity;
 
 public class MeepMeepTesting {
-    public static void main(String[] args) {
-        MeepMeep meepMeep = new MeepMeep(700);
 
-        RoadRunnerBotEntity myBot = new DefaultBotBuilder(meepMeep)
+    public static void main(String[] args) {
+        double MAX_VEL       =   52.48291908330528;
+        double MAX_ACCEL     =   52.48291908330528;
+        double MAX_ANG_VEL   =   Math.toRadians(222.7444266666667);
+        double MAX_ANG_ACCEL =   Math.toRadians(222.7444266666667);
+        double TRACK_WIDTH   =   13.5;
+        double DELAY         =   1;
+        MeepMeep meepMeep    =   new MeepMeep(650);
+
+        Pose2d netZone = new Pose2d(55, 55, Math.toRadians(45));
+
+        RoadRunnerBotEntity BlueRightSelfish = new DefaultBotBuilder(meepMeep)
                 // Set bot constraints: maxVel, maxAccel, maxAngVel, maxAngAccel, track width
-                .setConstraints(52.48291908330528, 52.48291908330528, Math.toRadians(222.7444266666667), Math.toRadians(222.7444266666667), 13.5)
+                .setConstraints(MAX_VEL, MAX_ACCEL, MAX_ANG_VEL, MAX_ANG_ACCEL, TRACK_WIDTH)
                 .followTrajectorySequence(drive -> drive.trajectorySequenceBuilder(new Pose2d(-12, 65.5, Math.toRadians(-90)))
-                        .splineTo(new Vector2d(0,28),Math.toRadians(-90))
-                        .waitSeconds(3)
-                        .back(24)
-                        .turn(Math.toRadians(45))
-                        .splineTo(new Vector2d(48,38),Math.toRadians(-90))
-                        .waitSeconds(3)
+                        .splineTo(new Vector2d(0, 30), Math.toRadians(-90))
+                        .waitSeconds(DELAY)
+                        .back(0.1)
+                        .splineTo(new Vector2d(-12, 40), Math.toRadians(-180))
+                        .lineTo(new Vector2d(18,40))
+                        .splineTo(new Vector2d(40,26), Math.toRadians(0))
+                        .waitSeconds(DELAY)
+                        .lineToLinearHeading(netZone)
+                        .waitSeconds(DELAY)
+                        .lineToLinearHeading(new Pose2d(40, 26, Math.toRadians(0)))
+                        .forward(10)
+                        .waitSeconds(DELAY)
+                        .lineToLinearHeading(new Pose2d(55, 55, Math.toRadians(45)))
+                        .waitSeconds(DELAY)
+                        .lineToLinearHeading(new Pose2d(50, 26, Math.toRadians(0)))
+                        .forward(10)
+                        .waitSeconds(DELAY)
+                        .lineToLinearHeading(new Pose2d(55, 55, Math.toRadians(45)))
+                        .waitSeconds(DELAY)
+                        .lineToLinearHeading(new Pose2d(46, 38, Math.toRadians(180)))
+                        .lineTo(new Vector2d(-24, 38))
+                        .splineTo(new Vector2d(-40, 63), Math.toRadians(90))
                         .build());
 
+        RoadRunnerBotEntity BlueLeftSelfish = new DefaultBotBuilder(meepMeep)
+                // Set bot constraints: maxVel, maxAccel, maxAngVel, maxAngAccel, track width
+                .setConstraints(MAX_VEL, MAX_ACCEL, MAX_ANG_VEL, MAX_ANG_ACCEL, TRACK_WIDTH)
+                .followTrajectorySequence(drive -> drive.trajectorySequenceBuilder(new Pose2d(12, 65.5, Math.toRadians(-90)))
+                        .splineTo(new Vector2d(0, 30), Math.toRadians(-90))
+                        .waitSeconds(DELAY)
+                        .back(0.1)
+                        .splineTo(new Vector2d(-12, 40), Math.toRadians(-180))
+                        .lineTo(new Vector2d(18,40))
+                        .splineTo(new Vector2d(40,26), Math.toRadians(0))
+                        .waitSeconds(DELAY)
+                        .lineToLinearHeading(new Pose2d(55, 55, Math.toRadians(45)))
+                        .waitSeconds(DELAY)
+                        .lineToLinearHeading(new Pose2d(40, 26, Math.toRadians(0)))
+                        .forward(10)
+                        .waitSeconds(DELAY)
+                        .lineToLinearHeading(new Pose2d(55, 55, Math.toRadians(45)))
+                        .waitSeconds(DELAY)
+                        .lineToLinearHeading(new Pose2d(50, 26, Math.toRadians(0)))
+                        .forward(10)
+                        .waitSeconds(DELAY)
+                        .lineToLinearHeading(new Pose2d(55, 55, Math.toRadians(45)))
+                        .waitSeconds(DELAY)
+                        .lineToLinearHeading(new Pose2d(46, 38, Math.toRadians(180)))
+                        .lineTo(new Vector2d(-24, 38))
+                        .splineTo(new Vector2d(-40, 63), Math.toRadians(90))
+                        .build());
+
+        RoadRunnerBotEntity RedRightSelfish = new DefaultBotBuilder(meepMeep)
+                // Set bot constraints: maxVel, maxAccel, maxAngVel, maxAngAccel, track width
+                .setConstraints(MAX_VEL, MAX_ACCEL, MAX_ANG_VEL, MAX_ANG_ACCEL, TRACK_WIDTH)
+                .followTrajectorySequence(drive -> drive.trajectorySequenceBuilder(new Pose2d(-12, -65.5, Math.toRadians(90)))
+                        .splineTo(new Vector2d(0, -30), Math.toRadians(90))
+                        .waitSeconds(DELAY)
+                        .back(0.1)
+                        .splineTo(new Vector2d(12, -40), Math.toRadians(0))
+                        .lineTo(new Vector2d(-18,-40))
+                        .splineTo(new Vector2d(-40,-26), Math.toRadians(180))
+                        .waitSeconds(DELAY)
+                        .lineToLinearHeading(new Pose2d(-55, -55, Math.toRadians(-135)))
+                        .waitSeconds(DELAY)
+                        .lineToLinearHeading(new Pose2d(-40, -26, Math.toRadians(180)))
+                        .forward(10)
+                        .waitSeconds(DELAY)
+                        .lineToLinearHeading(new Pose2d(-55, -55, Math.toRadians(-135)))
+                        .waitSeconds(DELAY)
+                        .lineToLinearHeading(new Pose2d(-50, -26, Math.toRadians(180)))
+                        .forward(10)
+                        .waitSeconds(DELAY)
+                        .lineToLinearHeading(new Pose2d(-55, -55, Math.toRadians(-135)))
+                        .waitSeconds(DELAY)
+                        .lineToLinearHeading(new Pose2d(-46, -38, Math.toRadians(0)))
+                        .lineTo(new Vector2d(24, -38))
+                        .splineTo(new Vector2d(40, -63), Math.toRadians(-90))
+                        .build());
+
+        RoadRunnerBotEntity RedLeftSelfish = new DefaultBotBuilder(meepMeep)
+                // Set bot constraints: maxVel, maxAccel, maxAngVel, maxAngAccel, track width
+                .setConstraints(MAX_VEL, MAX_ACCEL, MAX_ANG_VEL, MAX_ANG_ACCEL, TRACK_WIDTH)
+                .followTrajectorySequence(drive -> drive.trajectorySequenceBuilder(new Pose2d(12, -65.5, Math.toRadians(90)))
+                        .splineTo(new Vector2d(0, -30), Math.toRadians(90))
+                        .waitSeconds(DELAY)
+                        .back(0.1)
+                        .splineTo(new Vector2d(12, -40), Math.toRadians(0))
+                        .lineTo(new Vector2d(-18,-40))
+                        .splineTo(new Vector2d(-40,-26), Math.toRadians(180))
+                        .waitSeconds(DELAY)
+                        .lineToLinearHeading(new Pose2d(-55, -55, Math.toRadians(-135)))
+                        .waitSeconds(DELAY)
+                        .lineToLinearHeading(new Pose2d(-40, -26, Math.toRadians(180)))
+                        .forward(10)
+                        .waitSeconds(DELAY)
+                        .lineToLinearHeading(new Pose2d(-55, -55, Math.toRadians(-135)))
+                        .waitSeconds(DELAY)
+                        .lineToLinearHeading(new Pose2d(-50, -26, Math.toRadians(180)))
+                        .forward(10)
+                        .waitSeconds(DELAY)
+                        .lineToLinearHeading(new Pose2d(-55, -55, Math.toRadians(-135)))
+                        .waitSeconds(DELAY)
+                        .lineToLinearHeading(new Pose2d(-46, -38, Math.toRadians(0)))
+                        .lineTo(new Vector2d(24, -38))
+                        .splineTo(new Vector2d(40, -63), Math.toRadians(-90))
+                        .build());
 
         meepMeep.setBackground(MeepMeep.Background.FIELD_INTOTHEDEEP_JUICE_BLACK)
                 .setDarkMode(true)
                 .setBackgroundAlpha(0.95f)
-                .addEntity(myBot)
+                .addEntity(BlueRightSelfish)
+                .addEntity(BlueLeftSelfish)
+                .addEntity(RedRightSelfish)
+                .addEntity(RedLeftSelfish)
                 .start();
     }
 }
