@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_USING_ENCODER;
+import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_WITHOUT_ENCODER;
 import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.STOP_AND_RESET_ENCODER;
 import static com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.BRAKE;
 import static com.qualcomm.robotcore.hardware.DcMotorSimple.Direction.REVERSE;
@@ -13,7 +14,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 @TeleOp
-public class TeleOpDrive extends LinearOpMode {
+public class  TeleOpDrive extends LinearOpMode {
 
     ElapsedTime speedFactorDebounce;
     ElapsedTime intakeSpeedFactorDebounce;
@@ -63,6 +64,7 @@ public class TeleOpDrive extends LinearOpMode {
         while(opModeIsActive()) {
             processVariableUpdates();
             processDriving();
+            processControl();
             processTelemetry();
         }
     }
@@ -126,11 +128,11 @@ public class TeleOpDrive extends LinearOpMode {
         } else if (intakeSpeedFactor <= 0) {
             intakeSpeedFactor = 0.1;
         }
-        if(gamepad2.dpad_up && wristPositionDebounce.milliseconds() <= buttonDelay){
+        if(gamepad2.dpad_up && wristPositionDebounce.milliseconds() >= buttonDelay){
             wristPosition += 0.1;
             wristPositionDebounce.reset();
         }
-        if(gamepad2.dpad_down && wristPositionDebounce.milliseconds() <= buttonDelay){
+        if(gamepad2.dpad_down && wristPositionDebounce.milliseconds() >= buttonDelay){
             wristPosition -= 0.1;
             wristPositionDebounce.reset();
         }
@@ -147,7 +149,7 @@ public class TeleOpDrive extends LinearOpMode {
         wrist.setPosition(wristPosition);
 
         if(gamepad2.left_bumper){
-            intakeGear.setPosition(0.4);
+            intakeGear.setPosition(0);
         }
         if(gamepad2.right_bumper){
             intakeGear.setPosition(1);
@@ -163,25 +165,22 @@ public class TeleOpDrive extends LinearOpMode {
 
     private void initHardware() {
         driveFrontLeft = hardwareMap.get(DcMotor.class, "driveFrontLeft");
-        driveFrontLeft.setMode(STOP_AND_RESET_ENCODER);
-        driveFrontLeft.setMode(RUN_USING_ENCODER);
+        driveFrontLeft.setMode(RUN_WITHOUT_ENCODER);
         driveFrontLeft.setZeroPowerBehavior(BRAKE);
         driveFrontLeft.setDirection(REVERSE);
 
         driveFrontRight = hardwareMap.get(DcMotor.class, "driveFrontRight");
         driveFrontRight.setMode(STOP_AND_RESET_ENCODER);
-        driveFrontRight.setMode(RUN_USING_ENCODER);
+        driveFrontRight.setMode(RUN_WITHOUT_ENCODER);
         driveFrontRight.setZeroPowerBehavior(BRAKE);
 
         driveBackLeft = hardwareMap.get(DcMotor.class, "driveBackLeft");
-        driveBackLeft.setMode(STOP_AND_RESET_ENCODER);
-        driveBackLeft.setMode(RUN_USING_ENCODER);
+        driveBackLeft.setMode(RUN_WITHOUT_ENCODER);
         driveBackLeft.setZeroPowerBehavior(BRAKE);
         driveBackLeft.setDirection(REVERSE);
 
         driveBackRight = hardwareMap.get(DcMotor.class, "driveBackRight");
-        driveBackRight.setMode(STOP_AND_RESET_ENCODER);
-        driveBackRight.setMode(RUN_USING_ENCODER);
+        driveBackRight.setMode(RUN_WITHOUT_ENCODER);
         driveBackRight.setZeroPowerBehavior(BRAKE);
 
         intakeArm = hardwareMap.get(DcMotor.class, "intakeArm");
