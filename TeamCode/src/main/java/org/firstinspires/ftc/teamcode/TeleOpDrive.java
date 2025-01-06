@@ -20,28 +20,26 @@ public class  TeleOpDrive extends LinearOpMode {
     ElapsedTime intakeSpeedFactorDebounce;
     ElapsedTime wristPositionDebounce;
 
-    double wristPosition = 0.5;
     double speedFactor = 0.7;
     double intakeSpeedFactor = 0.5;
     double ly1;
     double lx1;
     double rx1;
-    double lt2;
-    double rt2;
-    double lt1;
-    double rt1;
-    double ly2;
 
-    Servo intakeGear;
-    Servo wrist;
+    Servo intakeArm;
+    Servo intakeRotator;
+    Servo pincherRotator;
+    Servo intakeSlide;
+    Servo pincher;
+    Servo claw;
+    Servo basket;
 
     DcMotor driveFrontLeft;
     DcMotor driveFrontRight;
     DcMotor driveBackLeft;
     DcMotor driveBackRight;
-    DcMotor intakeSlide1;
-    DcMotor intakeSlide2;
-    DcMotor intakeArm;
+    DcMotor outtakeSlide1;
+    DcMotor outtakeSlide2;
 
     Gamepad currentGamepad1 = new Gamepad();
     Gamepad currentGamepad2 = new Gamepad();
@@ -86,11 +84,6 @@ public class  TeleOpDrive extends LinearOpMode {
         ly1 = -gamepad1.left_stick_y;
         lx1 = gamepad1.left_stick_x * 1.1;
         rx1 = gamepad1.right_stick_x;
-        lt2 = gamepad2.left_trigger;
-        rt2 = gamepad2.right_trigger;
-        lt1 = gamepad1.left_trigger;
-        rt1 = gamepad1.right_trigger;
-        ly2 = gamepad2.left_stick_y;
 
         previousGamepad1.copy(currentGamepad1);
         previousGamepad2.copy(currentGamepad2);
@@ -128,36 +121,12 @@ public class  TeleOpDrive extends LinearOpMode {
         } else if (intakeSpeedFactor <= 0) {
             intakeSpeedFactor = 0.1;
         }
-        if(gamepad2.dpad_up && wristPositionDebounce.milliseconds() >= buttonDelay){
-            wristPosition += 0.1;
-            wristPositionDebounce.reset();
-        }
-        if(gamepad2.dpad_down && wristPositionDebounce.milliseconds() >= buttonDelay){
-            wristPosition -= 0.1;
-            wristPositionDebounce.reset();
-        }
     }
 
     private void processControl(){
-        double intakeSlidePower = rt1-lt1;
-        double intakeArmPower = ly2;
-
-        intakeSlide1.setPower(intakeSlidePower * intakeSpeedFactor);
-        intakeSlide2.setPower(intakeSlidePower * intakeSpeedFactor);
-        intakeArm.setPower(intakeArmPower * intakeSpeedFactor);
-
-        wrist.setPosition(wristPosition);
-
-        if(gamepad2.left_bumper){
-            intakeGear.setPosition(0);
-        }
-        if(gamepad2.right_bumper){
-            intakeGear.setPosition(1);
-        }
 
     }
     private void processTelemetry(){
-
 
         telemetry.update();
 
@@ -183,24 +152,18 @@ public class  TeleOpDrive extends LinearOpMode {
         driveBackRight.setMode(RUN_WITHOUT_ENCODER);
         driveBackRight.setZeroPowerBehavior(BRAKE);
 
-        intakeArm = hardwareMap.get(DcMotor.class, "intakeArm");
-        intakeArm.setMode(STOP_AND_RESET_ENCODER);
-        intakeArm.setMode(RUN_USING_ENCODER);
-        intakeArm.setZeroPowerBehavior(BRAKE);
+        intakeArm = hardwareMap.get(Servo.class, "intakeArm");
 
-        intakeSlide1 = hardwareMap.get(DcMotor.class, "intakeSlide1");
-        intakeSlide1.setMode(STOP_AND_RESET_ENCODER);
-        intakeSlide1.setMode(RUN_USING_ENCODER);
-        intakeSlide1.setZeroPowerBehavior(BRAKE);
-        intakeSlide1.setDirection(REVERSE);
+        outtakeSlide1 = hardwareMap.get(DcMotor.class, "outtakeSlide1");
+        outtakeSlide1.setMode(STOP_AND_RESET_ENCODER);
+        outtakeSlide1.setMode(RUN_USING_ENCODER);
+        outtakeSlide1.setZeroPowerBehavior(BRAKE);
+        outtakeSlide1.setDirection(REVERSE);
 
-        intakeSlide2 = hardwareMap.get(DcMotor.class, "intakeSlide2");
-        intakeSlide2.setMode(STOP_AND_RESET_ENCODER);
-        intakeSlide2.setMode(RUN_USING_ENCODER);
-        intakeSlide2.setZeroPowerBehavior(BRAKE);
-
-        wrist = hardwareMap.get(Servo.class, "wrist");
-        intakeGear = hardwareMap.get(Servo.class, "intakeGear");
+        outtakeSlide2 = hardwareMap.get(DcMotor.class, "outtakeSlide2");
+        outtakeSlide2.setMode(STOP_AND_RESET_ENCODER);
+        outtakeSlide2.setMode(RUN_USING_ENCODER);
+        outtakeSlide2.setZeroPowerBehavior(BRAKE);
     }
 
 }
