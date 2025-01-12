@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 public enum RunStates {
+    // Sit in front of the samples, prepared to pick up.
     PICKING(
             0,
             0,
@@ -11,6 +12,7 @@ public enum RunStates {
             0,
             false
     ),
+    // Grab the sample.
     GRAB(
             0,
             0,
@@ -21,6 +23,7 @@ public enum RunStates {
             0,
             false
     ),
+    // Hold the sample above the transfer bucket
     HOLD(0,
             0,
             0,
@@ -30,6 +33,7 @@ public enum RunStates {
             0,
             false
     ),
+    // Drop the sample into the transfer bucket.
     TRANSFER(0,
             0,
             0,
@@ -39,6 +43,7 @@ public enum RunStates {
             0,
             false
     ),
+    // Leave the bucket down, lift slides to top basket
     BASKET_PREPARE(0,
             0,
             0,
@@ -48,6 +53,7 @@ public enum RunStates {
             0,
             false
     ),
+    // Tilt the bucket to slide the sample into the top basket
     BASKET_DROP(0,
             0,
             0,
@@ -56,9 +62,51 @@ public enum RunStates {
             true,
             0,
             false
+    ),
+    // Drop the sample into out the front of the bot, for observation zone
+    DROP_FRONT(
+            0,
+            0,
+            0,
+            0,
+            0,
+            true,
+            0,
+            false
+    ),
+    // Pick up a specimen from the wall
+    GRAB_WALL(
+            0,
+            0,
+            0,
+            0,
+            0,
+            true,
+            0,
+            false
+    ),
+    // Hover above the top chamber
+    PREPARE_CHAMBER(
+            0,
+            0,
+            0,
+            0,
+            0,
+            false,
+            0,
+            false
+    ),
+    // Score on the top chamber
+    SCORE_CHAMBER(
+            0,
+            0,
+            0,
+            0,
+            0,
+            true,
+            0,
+            false
     );
-// ToDo: Add more states for chambers
-
 
 
     public double armPos;

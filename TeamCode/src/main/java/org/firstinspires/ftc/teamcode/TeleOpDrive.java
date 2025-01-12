@@ -3,37 +3,31 @@ package org.firstinspires.ftc.teamcode;
 import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.*;
 import static com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.BRAKE;
 import static com.qualcomm.robotcore.hardware.DcMotorSimple.Direction.*;
-import static org.firstinspires.ftc.teamcode.modules.Robot.*;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
-
-import org.firstinspires.ftc.teamcode.modules.IntakePositions;
-import org.firstinspires.ftc.teamcode.modules.Robot;
 import org.openftc.easyopencv.OpenCvCamera;
 
 @TeleOp(name = "Tele-Op Driving")
 public class TeleOpDrive extends LinearOpMode {
 
-    Robot bot;
-    ElapsedTime pinch1Debounce;
-    ElapsedTime pinch2Debounce;
-    ElapsedTime speedFactorDebounce;
-    ElapsedTime intakeSpeedFactorDebounce;
-    private ElapsedTime intakeDebounce;
+    ElapsedTime buttonDebounce;
 
-    static final int buttonDelay = 250;
+    static double PINCHER_OPEN = 0;
+    static double PINCHER_CLOSED = 0;
+    static double CLAW_OPEN = 0;
+    static double CLAW_CLOSED = 0;
+
+    static int buttonDelay = 250;
     private int intakePosition = 0;
+
     int targetSlidePosition = 0;
     int targetArmPosition = 0;
 
-    double speedFactor = 0.7;
-    double intakeSpeedFactor = 0.5;
     double ly1;
     double lx1;
     double rx1;
@@ -51,30 +45,28 @@ public class TeleOpDrive extends LinearOpMode {
     DcMotor driveFrontRight;
     DcMotor driveBackLeft;
     DcMotor driveBackRight;
-    DcMotor intakeSlide1;
-    DcMotor intakeSlide2;
-    DcMotor intakeArm;
+    DcMotor outtakeSlide1;
+    DcMotor outtakeSlide2;
 
-    Servo pincher1;
-    Servo pincher2;
-    Servo drone;
-
-    TouchSensor slideSwitch;
+    Servo pincher;
+    Servo intakeSlide;
+    Servo intakeArm;
+    Servo pincherRotator;
+    Servo intakeRotator;
+    Servo basket;
+    Servo claw;
 
     OpenCvCamera webcam1;
 
-    boolean pincher1Open;
-    boolean pincher2Open;
-    boolean droneLaunched;
-    boolean manualControl;
+    boolean pincherOpen;
     boolean hangPrimed = false;
     boolean hangInitiated = false;
-    boolean activeReset = false;
 
     RunStates intakePositions[] = RunStates.values();
 
     /*
-    ToDo Adjust code to match new robot
+    ToDo Get intakePositions working for setting the positions of all devices
+
     ToDo Set up automatic sample intake and transfer
     ToDo Set up automatic sample outtake
 
@@ -86,16 +78,11 @@ public class TeleOpDrive extends LinearOpMode {
 
         initHardware();
 
-        pinch1Debounce = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
-        pinch2Debounce = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
-        speedFactorDebounce = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
-        intakeSpeedFactorDebounce = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
-        intakeDebounce = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+        buttonDebounce = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
 
         telemetry.addLine("> PRESS START");
         waitForStart();
 
-        telemetry.addLine("> PROGRAM STARTED");
         while(opModeIsActive()) {
 
             processVariableUpdates();
@@ -104,7 +91,6 @@ public class TeleOpDrive extends LinearOpMode {
             processControl();
             processTelemetry();
 
-            passiveResetSlidePositions();
         }
     }
 
@@ -116,232 +102,43 @@ public class TeleOpDrive extends LinearOpMode {
         double frontRightPower = (ly1 - lx1 - rx1) / denominator;
         double backRightPower = (ly1 + lx1 - rx1) / denominator;
 
-        driveFrontLeft.setPower(frontLeftPower * speedFactor);
-        driveBackLeft.setPower(backLeftPower * speedFactor);
-        driveFrontRight.setPower(frontRightPower * speedFactor);
-        driveBackRight.setPower(backRightPower * speedFactor);
+        driveFrontLeft.setPower(frontLeftPower);
+        driveBackLeft.setPower(backLeftPower);
+        driveFrontRight.setPower(frontRightPower);
+        driveBackRight.setPower(backRightPower);
     }
 
     private void processControl() {
-        if (gamepad2.left_stick_button || activeReset) {
-            activeResetSlidePositions();
+
+        // We check if the debouce is greater than the button delay to avoid one press being registered as many
+        if(gamepad1.b && buttonDebounce.milliseconds() > buttonDelay) {
+            autoIntakeSample();
+            transferSample();
         }
 
-        if (gamepad2.left_bumper && !previousGamepad2.left_bumper && pinch1Debounce.milliseconds() > buttonDelay) {
-            pincher1Open = !pincher1Open;
-            pinch1Debounce.reset();
-        }
-
-        if (gamepad2.right_bumper && !previousGamepad2.right_bumper && pinch2Debounce.milliseconds() > buttonDelay) {
-            pincher2Open = !pincher2Open;
-            pinch2Debounce.reset();
-        }
-
-        if (pincher1Open) {
-            pincher1.setPosition(PINCHER_1_OPEN);
+        if (pincherOpen) {
+            pincher.setPosition(PINCHER_OPEN);
         } else {
-            pincher1.setPosition(PINCHER_1_CLOSED);
-        }
-
-        if (pincher2Open) {
-            pincher2.setPosition(PINCHER_2_OPEN);
-        } else {
-            pincher2.setPosition(PINCHER_2_CLOSED);
-        }
-
-        if (gamepad1.x && gamepad1.b) {
-            drone.setPosition(0.7);
-            droneLaunched = true;
-        }
-
-        if (!droneLaunched) {
-            drone.setPosition(0);
-        }
-
-        if (!activeReset) {
-            if (manualControl) {
-                double intakeSlidePower = -gamepad2.left_stick_y * 0.5;
-                double intakeArmPower = -gamepad2.right_stick_y * 0.5;
-
-                if (gamepad2.left_stick_y > 0.1 || gamepad2.left_stick_y < -0.1) {
-
-                    intakeSlide1.setMode(RUN_USING_ENCODER);
-                    intakeSlide2.setMode(RUN_USING_ENCODER);
-
-                    intakeSlide1.setPower(intakeSlidePower);
-                    intakeSlide2.setPower(intakeSlidePower);
-
-                    targetSlidePosition = intakeSlide1.getCurrentPosition();
-                } else {
-
-                    if (targetSlidePosition < 0) {
-                        targetSlidePosition = 0;
-                    }
-
-                    intakeSlide1.setTargetPosition(targetSlidePosition);
-                    intakeSlide2.setTargetPosition(targetSlidePosition);
-
-                    intakeSlide1.setMode(RUN_TO_POSITION);
-                    intakeSlide2.setMode(RUN_TO_POSITION);
-
-                    intakeSlide1.setPower(intakeSpeedFactor);
-                    intakeSlide2.setPower(intakeSpeedFactor);
-                }
-
-                if (gamepad2.right_stick_y > 0.05 || gamepad2.right_stick_y < -0.05) {
-
-                    intakeArm.setMode(RUN_USING_ENCODER);
-                    intakeArm.setPower(intakeArmPower);
-
-                    targetArmPosition = intakeArm.getCurrentPosition();
-                } else {
-                    intakeArm.setTargetPosition(targetArmPosition);
-
-                    intakeArm.setMode(RUN_TO_POSITION);
-
-                    intakeArm.setPower(intakeSpeedFactor);
-                }
-
-                if (gamepad2.back && !previousGamepad2.back) {
-                    if (intakePosition > 7) {
-                        intakePosition = 7;
-                    }
-                    manualControl = false;
-                    intakeSlide1.setMode(STOP_AND_RESET_ENCODER);
-                    intakeSlide2.setMode(STOP_AND_RESET_ENCODER);
-                    intakeArm.setMode(STOP_AND_RESET_ENCODER);
-                }
-            } else {
-                if (gamepad2.back && !previousGamepad2.back) {
-                    manualControl = true;
-                    return;
-                }
-
-                if (gamepad2.dpad_up && intakeDebounce.milliseconds() > 200) {
-                    intakePosition++;
-                    intakeDebounce.reset();
-                } else if (gamepad2.dpad_down && intakeDebounce.milliseconds() > 200) {
-                    intakePosition--;
-                    intakeDebounce.reset();
-                }
-
-                if (intakePosition > 6) {
-                    intakePosition = 6;
-                } else if (intakePosition < 0) {
-                    intakePosition = 0;
-                }
-
-                if (gamepad2.x && gamepad2.b) {
-                    hangPrimed = true;
-                }
-
-                if (hangPrimed) {
-                    intakePosition = 7;
-                    telemetry.addLine("READY TO HANG");
-                }
-
-                if (hangPrimed && gamepad2.y && gamepad2.a) {
-                    hangInitiated = true;
-                }
-
-                if (hangInitiated) {
-                    intakePosition = 8;
-                    telemetry.clearAll();
-                    telemetry.addLine("I really hope this works");
-                    telemetry.addLine("and we are hanging right now");
-                    telemetry.addLine("- Cohen");
-                    telemetry.update();
-                }
-
-                bot.runIntake(intakePositions[intakePosition], intakeSpeedFactor);
-            }
+            pincher.setPosition(PINCHER_CLOSED);
         }
     }
 
     private void processVariableUpdates() {
         ly1 = -gamepad1.left_stick_y;
+        // We apply a 1.1 multiplier to the x-axis to make apply for strafing inaccuracies
         lx1 = gamepad1.left_stick_x * 1.1;
         rx1 = gamepad1.right_stick_x;
-        lt2 = gamepad2.left_trigger;
-        rt2 = gamepad2.right_trigger;
-        lt1 = gamepad1.left_trigger;
-        rt1 = gamepad1.right_trigger;
 
         previousGamepad1.copy(currentGamepad1);
         previousGamepad2.copy(currentGamepad2);
         currentGamepad1.copy(gamepad1);
         currentGamepad2.copy(gamepad2);
 
-        if (gamepad1.dpad_up && (speedFactorDebounce.milliseconds() >= buttonDelay)) {
-            speedFactorDebounce.reset();
-            speedFactor += 0.1;
-        }
-
-        if (gamepad1.dpad_down && (speedFactorDebounce.milliseconds() >= buttonDelay)) {
-            speedFactorDebounce.reset();
-            speedFactor -= 0.1;
-        }
-
-        if (speedFactor > 1) {
-            speedFactor = 1;
-        } else if (speedFactor <= 0) {
-            speedFactor = 0.1;
-        }
-
-        if (gamepad2.dpad_right && (intakeSpeedFactorDebounce.milliseconds() >= buttonDelay)) {
-            intakeSpeedFactorDebounce.reset();
-            intakeSpeedFactor += 0.1;
-        }
-
-        if (gamepad2.dpad_left && (intakeSpeedFactorDebounce.milliseconds() >= buttonDelay)) {
-            intakeSpeedFactorDebounce.reset();
-            intakeSpeedFactor -= 0.1;
-        }
-
-        if (intakeSpeedFactor > 1) {
-            intakeSpeedFactor = 1;
-        } else if (intakeSpeedFactor <= 0) {
-            intakeSpeedFactor = 0.1;
-        }
     }
 
     private void processTelemetry(){
-        if(!hangInitiated) {
-            telemetry.addLine("DRIVER:");
-            telemetry.addData("Speed Factor", speedFactor);
-            if (droneLaunched) {
-                telemetry.addLine("DRONE LAUNCHED");
-            }
-
-            telemetry.addLine();
-            telemetry.addLine();
-
-            telemetry.addLine("CONTROLLER:");
-            if(manualControl){
-                telemetry.addLine("MANUAL");
-                telemetry.addData("Slides At Bottom", slideSwitch.isPressed());
-                telemetry.addLine();
-            }
-            if (pincher1Open) {
-                telemetry.addLine("LEFT PINCHER OPEN");
-            } else {
-                telemetry.addLine("LEFT PINCHER CLOSED");
-            }
-
-            if (pincher2Open) {
-                telemetry.addLine("RIGHT PINCHER OPEN");
-            } else {
-                telemetry.addLine("RIGHT PINCHER CLOSED");
-            }
-            telemetry.addData("Intake Speed", intakeSpeedFactor);
-            telemetry.addLine();
-            telemetry.addData("Intake Position",intakePositions[intakePosition]);
-            telemetry.addLine();
-
-
-            telemetry.update();
-        }
     }
+
     private void initHardware() {
         driveFrontLeft = hardwareMap.get(DcMotor.class, "driveFrontLeft");
         driveFrontLeft.setMode(STOP_AND_RESET_ENCODER);
@@ -365,94 +162,46 @@ public class TeleOpDrive extends LinearOpMode {
         driveBackRight.setMode(RUN_USING_ENCODER);
         driveBackRight.setZeroPowerBehavior(BRAKE);
 
-        intakeArm = hardwareMap.get(DcMotor.class, "intakeArm");
-        intakeArm.setMode(STOP_AND_RESET_ENCODER);
-        intakeArm.setMode(RUN_USING_ENCODER);
-        intakeArm.setZeroPowerBehavior(BRAKE);
+        outtakeSlide1 = hardwareMap.get(DcMotor.class, "outtakeSlide1");
+        outtakeSlide1.setMode(STOP_AND_RESET_ENCODER);
+        outtakeSlide1.setMode(RUN_USING_ENCODER);
+        outtakeSlide1.setZeroPowerBehavior(BRAKE);
+        outtakeSlide1.setDirection(REVERSE);
 
-        intakeSlide1 = hardwareMap.get(DcMotor.class, "intakeSlide1");
-        intakeSlide1.setMode(STOP_AND_RESET_ENCODER);
-        intakeSlide1.setMode(RUN_USING_ENCODER);
-        intakeSlide1.setZeroPowerBehavior(BRAKE);
-        intakeSlide1.setDirection(REVERSE);
-
-        intakeSlide2 = hardwareMap.get(DcMotor.class, "intakeSlide2");
-        intakeSlide2.setMode(STOP_AND_RESET_ENCODER);
-        intakeSlide2.setMode(RUN_USING_ENCODER);
-        intakeSlide2.setZeroPowerBehavior(BRAKE);
+        outtakeSlide2 = hardwareMap.get(DcMotor.class, "outtakeSlide2");
+        outtakeSlide2.setMode(STOP_AND_RESET_ENCODER);
+        outtakeSlide2.setMode(RUN_USING_ENCODER);
+        outtakeSlide2.setZeroPowerBehavior(BRAKE);
 
 
-        pincher1 = hardwareMap.get(Servo.class, "pincher1");
-        pincher2 = hardwareMap.get(Servo.class, "pincher2");
-        drone = hardwareMap.get(Servo.class, "drone");
-        pincher1Open = true;
-        pincher2Open = true;
+        pincher = hardwareMap.get(Servo.class, "pincher");
+        pincherOpen = false;
 
-        slideSwitch = hardwareMap.get(TouchSensor.class, "slideSwitch");
+        intakeArm = hardwareMap.get(Servo.class, "intakeArm");
 
-        manualControl = false;
+        pincherRotator = hardwareMap.get(Servo.class, "pincherRotator");
 
-        this.bot = new Robot(
-                driveFrontLeft,
-                driveBackLeft,
-                driveBackRight,
-                driveFrontRight,
-                intakeSlide1,
-                intakeSlide2,
-                intakeArm,
-                pincher1,
-                pincher2,
-                slideSwitch,
-                webcam1,
-                telemetry,
-                this
-        );
+        intakeRotator = hardwareMap.get(Servo.class, "intakeRotator");
+
+        intakeSlide = hardwareMap.get(Servo.class, "intakeSlide");
+
+        basket = hardwareMap.get(Servo.class, "basket");
+
+        claw = hardwareMap.get(Servo.class, "claw");
     }
 
-    private void activeResetSlidePositions(){
-        manualControl = false;
 
-        intakeArm.setTargetPosition(20);
-        intakeArm.setMode(RUN_TO_POSITION);
-        intakeArm.setPower(0.5);
+    // Action Methods
 
-        intakeSlide1.setMode(RUN_USING_ENCODER);
-        intakeSlide2.setMode(RUN_USING_ENCODER);
-        intakeSlide1.setPower(-0.5);
-        intakeSlide2.setPower(-0.5);
+     void autoIntakeSample(){
+         //ToDo Find the math required to get the offset from the robot to the sample, taking into account the extra distance at the end of the intake slide
+         // Get and return location of nearest yellow sample
+         double targetX = 0;
+         double targetY = 0;
+     }
+     void transferSample(){
 
-        if(!slideSwitch.isPressed()) {
-            activeReset = true;
-        }
-        if(slideSwitch.isPressed()){
-            intakeSlide1.setMode(STOP_AND_RESET_ENCODER);
-            intakeSlide2.setMode(STOP_AND_RESET_ENCODER);
-            activeReset = false;
-        }
-    }
+     }
 
-    private void passiveResetSlidePositions(){
-        if(intakeSlide1.getCurrentPosition() < 5 && !slideSwitch.isPressed()) {
 
-            intakeArm.setTargetPosition(20);
-            intakeArm.setMode(RUN_TO_POSITION);
-            intakeArm.setPower(0.5);
-
-            intakeSlide1.setMode(RUN_USING_ENCODER);
-            intakeSlide1.setPower(-0.5);
-
-            intakeSlide2.setMode(RUN_USING_ENCODER);
-            intakeSlide2.setPower(-0.5);
-
-            if (gamepad2.right_stick_button) {
-                manualControl = true;
-                return;
-            }
-        }
-
-        if(intakePosition == 0 && slideSwitch.isPressed()) {
-            intakeSlide1.setMode(STOP_AND_RESET_ENCODER);
-            intakeSlide2.setMode(STOP_AND_RESET_ENCODER);
-        }
-    }
 }

@@ -34,7 +34,7 @@ public class OpenCVTest extends LinearOpMode {
     private final double DistanceOffGround = 10;
 
 
-    SampleDetection cvpipline;
+    SampleDetection cvpipeline;
 
     List<Double> closest ;
     double distance;
@@ -51,9 +51,9 @@ public class OpenCVTest extends LinearOpMode {
 
 
         while (opModeIsActive()){
-            cvpipline.pos(getPosition());
+            cvpipeline.pos(getPosition());
             if( gamepad1.x){
-                List<ArrayList<Double>> samples = cvpipline.samples;
+                List<ArrayList<Double>> samples = cvpipeline.samples;
 
                 for(int i=0;i<samples.size(); i++){
                     List<Double> sample = samples.get(i);
@@ -84,8 +84,8 @@ public class OpenCVTest extends LinearOpMode {
         controlHubCam = OpenCvCameraFactory.getInstance().createWebcam(
                 hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
 
-        cvpipline = new SampleDetection();
-        controlHubCam.setPipeline(cvpipline);
+        cvpipeline = new SampleDetection();
+        controlHubCam.setPipeline(cvpipeline);
 
 
         controlHubCam.startStreaming(width, height, OpenCvCameraRotation.UPRIGHT);
