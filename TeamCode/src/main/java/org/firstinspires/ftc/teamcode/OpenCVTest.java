@@ -73,7 +73,7 @@ public class OpenCVTest extends LinearOpMode {
 
         controlHubCam.setPipeline(new YellowSampleDetection());
 
-
+        controlHubCam.openCameraDevice();
         controlHubCam.startStreaming(width, height, OpenCvCameraRotation.UPRIGHT);
 
 
