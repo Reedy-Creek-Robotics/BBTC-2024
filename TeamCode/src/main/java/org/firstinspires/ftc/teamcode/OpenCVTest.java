@@ -178,8 +178,10 @@ public class OpenCVTest extends LinearOpMode {
                 }
             }
         }
-        centroid = (Point) closest.get(0);
-        angleOfRotation = (double) closest.get(0);
+        if(closest.size==2){
+            centroid = (Point) closest.get(0);
+            angleOfRotation = (double) closest.get(0);
+        }
         long endTime = System.nanoTime();
         timeTakenMili = endTime-startTime;
         return input;
