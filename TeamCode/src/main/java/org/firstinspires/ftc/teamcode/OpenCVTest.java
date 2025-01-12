@@ -21,6 +21,7 @@ import org.openftc.easyopencv.OpenCvPipeline;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -31,48 +32,33 @@ public class OpenCVTest extends LinearOpMode {
     final int width = 1920;
     final int height = 1080;
     private OpenCvCamera controlHubCam;
-    private final double DistanceOffGround = 10;
+    private Point centroid = new Point();
+    private  double angleOfRotation = 0;
+    private List<Double> position = Arrays.asList(0.0, 0.0, 0.0);
 
-
-    SampleDetection cvpipeline;
-
-    List<Double> closest ;
-    double distance;
-    private List<Double> getPosition(){
-        return Arrays.asList(0.0,0.0,0.0);
+    private double timeTakenMili;
+    private void updatePosition() {
+        position = Arrays.asList(0.0, 0.0, 0.0);
     }
 
     @Override
-    public void runOpMode(){
+    public void runOpMode() {
         HardwareMap hwmap = hardwareMap;
         initOpenCV();
+
         waitForStart();
         Gamepad gamepad1 = new Gamepad();
 
 
-        while (opModeIsActive()){
-            cvpipeline.pos(getPosition());
-            if( gamepad1.x){
-                List<ArrayList<Double>> samples = cvpipeline.samples;
+        while (opModeIsActive()) {
+            updatePosition();
+            if (gamepad1.x) {
+                telemetry.addData("Closest Sample [x,y, rotation]: ", Arrays.asList(centroid.x,centroid.y,angleOfRotation));
+                telemetry.addData("time taken for image process: ", timeTakenMili);
 
-                for(int i=0;i<samples.size(); i++){
-                    List<Double> sample = samples.get(i);
-                    if (i==0){
-                         closest = sample;
-
-                         distance = Math.hypot(sample.get(0)-getPosition().get(0),sample.get(1)-getPosition().get(1));
-                    }else{
-
-                        if(distance<Math.hypot(sample.get(0)-getPosition().get(0),sample.get(1)-getPosition().get(1))){
-                            distance = Math.hypot(sample.get(0)-getPosition().get(0),sample.get(1)-getPosition().get(1));
-                            closest = sample;
-                        }
-                    }
-                }
-                telemetry.addData("Closest Sample [x,y,angle]: ", closest.toString());
             }
-
         }
+        controlHubCam.stopStreaming();
     }
 
 
@@ -84,198 +70,213 @@ public class OpenCVTest extends LinearOpMode {
         controlHubCam = OpenCvCameraFactory.getInstance().createWebcam(
                 hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
 
-        cvpipeline = new SampleDetection();
-        controlHubCam.setPipeline(cvpipeline);
+
+        controlHubCam.setPipeline(new YellowSampleDetection());
 
 
         controlHubCam.startStreaming(width, height, OpenCvCameraRotation.UPRIGHT);
 
 
-}
-class SampleDetection extends OpenCvPipeline{
-    final double width = 1920;
-    final double height = 1080;
-    final double screenCenterX = width/2;
-    final double screenCenterY = height/2;
-     final double distanceOffGround = 10.5;
-    List<Double> pos = Arrays.asList(0.0,0.0,0.0);
-    List<ArrayList<Double>>  samples = new ArrayList<>();
+    }
+    class YellowSampleDetection extends OpenCvPipeline{
+        final double width = 1920;
+        final double height = 1080;
+        final double screenCenterX = width/2;
+        final double screenCenterY = height/2;
+        final double distanceOffGround = 10.5;
+        @Override
+        public Mat processFrame(Mat input){
+            long startTime = System.nanoTime();
+            List<List<Object>> samplesData = new ArrayList<>();
 
-    @Override
-    public Mat processFrame(Mat input){
-        List<ArrayList<Double>>  samples = new ArrayList<>();
-        List<MatOfPoint> contours = getContours(input);
-        for(MatOfPoint c:contours){
-            if( Imgproc.contourArea(c) >=15000){
-                MatOfPoint2f c2f = new MatOfPoint2f(c.toArray());
-                double epsilon = 0.0129032258 * Imgproc.arcLength(c2f, true);
-                MatOfPoint2f approx = new MatOfPoint2f();
-                Imgproc.approxPolyDP(c2f, approx, epsilon, true);
+            Mat mask = preprocess(input);
+            ArrayList<MatOfPoint> contours = new ArrayList<>();
+            Imgproc.findContours(mask, contours, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 
-                List<Point> points = new ArrayList<>();
-                for (int j = 0; j < approx.rows(); j++) {
-                    points.add(approx.toList().get(j));
-                }
-                if(points.size()>4&points.size()<=6){
-                    Map<Double,Double>  vertices = new TreeMap<>();
-                    for(Point point:points){
-                        vertices.put(point.y, point.x);
+            Imgproc.drawContours(input, contours, -1, new Scalar(0,0,255));
+
+            for(MatOfPoint c: contours){
+                if(Imgproc.contourArea(c)>15000){
+                    MatOfPoint2f c2f = new MatOfPoint2f(c.toArray());
+                    double epsilon = 0.0129032258 * Imgproc.arcLength(c2f, true);
+                    MatOfPoint2f approx = new MatOfPoint2f();
+                    Imgproc.approxPolyDP(c2f, approx, epsilon, true);
+
+                    List<Point> points = new ArrayList<>();
+                    for (int j = 0; j < approx.rows(); j++){
+                        points.add(approx.toList().get(j));
                     }
-                    List<Double> ysSorted = (List<Double>) vertices.keySet();
 
-                    List<Point> pointsSorted = new ArrayList<>();
-                    for(Double val:ysSorted){
-                        pointsSorted.add(new Point(vertices.get(val), val));
-                    }
-                    Point firstHighestPoint = pointsSorted.get(0);
-                    Point secondHighestPoint = pointsSorted.get(1);
-                    Point thirdHighestPoint = pointsSorted.get(2);
+                    if(points.size()>4 && points.size()<=6){
+                        Map<Double,Double> vertices = new TreeMap<>();
+                        for(Point point:points){
+                            vertices.put(point.y, point.x);
+                        }
+                        List<Double> ysSorted = (List<Double>) vertices.keySet();
 
-                    double centerX = (secondHighestPoint.x+thirdHighestPoint.x)/2;
-                    double centerY = (secondHighestPoint.y+thirdHighestPoint.y)/2;
+                        List<Point> pointsSorted = new ArrayList<>();
+                        for(Double val:ysSorted){
+                            pointsSorted.add(new Point(vertices.get(val), val));
+                        }
 
-                    ArrayList<Double> fieldCentricCoordinates = onScreen2RealWorld(centerX,centerY);
-                    List<Double> side = new ArrayList<>();
-                    side.add(this.width);
-                    side.add(firstHighestPoint.y);
+                        Point firstHighestPoint = pointsSorted.get(0);
+                        Point secondHighestPoint = pointsSorted.get(1);
+                        Point thirdHighestPoint = pointsSorted.get(2);
 
-
-                    List<Integer> secondHighestPointli = new ArrayList<Integer>();
-                    secondHighestPointli.add((int) secondHighestPoint.x);
-                    secondHighestPointli.add( (int) secondHighestPoint.y);
+                        Imgproc.drawMarker(input, firstHighestPoint,new Scalar(255,0,0));
+                        Imgproc.drawMarker(input, secondHighestPoint,new Scalar(255,0,0));
+                        Imgproc.drawMarker(input, thirdHighestPoint,new Scalar(255,0,0));
 
 
-                    List<Integer> FirstHighestPointli = new ArrayList<Integer>();
-                    FirstHighestPointli.add((int) firstHighestPoint.x);
-                    FirstHighestPointli.add((int) firstHighestPoint.y);
+                        List<Point> longestLine = new ArrayList<>();
+                        double longestDistance = 0.0;
+                        for(int i =1; i < points.size(); i++){
+                            if(i==1){
+                                longestLine.add(points.get(0));
+                                longestLine.add(points.get(1));
+                                longestDistance = Math.hypot(points.get(i).x - points.get(0).x,points.get(i).y - points.get(0).y);
+                            }else{
+                                if(longestDistance<Math.hypot(points.get(i).x - points.get(i-1).x,points.get(i).y - points.get(i-1).y)){
+                                    longestDistance = Math.hypot(points.get(i).x - points.get(i-1).x,points.get(i).y - points.get(i-1).y);
+                                    longestLine.clear();
+                                    longestLine.add(points.get(i-1));
+                                    longestLine.add(points.get(i));
+                                }
 
-                    fieldCentricCoordinates.add(angle3pt(secondHighestPointli,FirstHighestPointli,  side));
-                    samples.add(fieldCentricCoordinates);
+                            }
+                        }
+
+
+                        Point centerOfSample = new Point((secondHighestPoint.x+thirdHighestPoint.x)/2,
+                                (secondHighestPoint.y+thirdHighestPoint.y)/2);
+                        Imgproc.drawMarker(input, centerOfSample, new Scalar(255,255,0));
+                        List<Object> singleSampleData = new ArrayList<>();
+                        Point sampleCentroid = onScreen2RealWorld(centerOfSample);
+                        singleSampleData.add(sampleCentroid);
+                        if(longestLine.get(1).y<longestLine.get(0).y){
+                                Collections.reverse(longestLine);
+                        }
+                        double sampleAngleOfRotation = angle3pt(longestLine.get(1),longestLine.get(0),
+                                new Point(width, longestLine.get(0).y));
+                        singleSampleData.add(sampleAngleOfRotation);
+                        samplesData.add(singleSampleData);
                 }
-
-
             }
         }
+        List<Object> closest = new ArrayList<>();
+        double shortestDistance = 0;
+        for(int i =0; i<samplesData.size();i++){
+            Point point = (Point) samplesData.get(0);
+            if(i==0){
+                closest = samplesData.get(i);
+
+                shortestDistance =  Math.hypot(position.get(0) - point.x, position.get(1)-point.y);
+            }else{
+                if(shortestDistance>Math.hypot(position.get(0) - point.x, position.get(1)-point.y)){
+                    closest=samplesData.get(i);
+                    shortestDistance = Math.hypot(position.get(0) - point.x, position.get(1)-point.y);
+                }
+            }
+        }
+        centroid = (Point) closest.get(0);
+        angleOfRotation = (double) closest.get(0);
+        long endTime = System.nanoTime();
+        timeTakenMili = endTime-startTime;
         return input;
-    }
-    public void pos(List<Double> pos){
-        this.pos = pos;
-    }
-
-    public List<ArrayList<Double>> getContours(){
-        return samples;
-    }
-    private ArrayList<Double> onScreen2RealWorld(double x, double y){
-        boolean xIsNegative = false;
-        double yAngleDown = ((double) (y - this.screenCenterY) /this.screenCenterY)*60;
-        double xAngleDown = ((double) (x - this.screenCenterX) /this.screenCenterX)*60;
-        if( xAngleDown<0){
-            xIsNegative = true;
-            xAngleDown = -xAngleDown;
         }
-        double yRealWorld =  this.distanceOffGround/Math.tan(Math.toRadians(yAngleDown));
-        double xRealWorld = Math.tan(xAngleDown)*yRealWorld;
-
-        return transformPosition(pos.get(0), pos.get(1), pos.get(2), xRealWorld,yRealWorld);
-
-
-
-    }
-
-    private   ArrayList<Double> transformPosition(double xR, double yR, double degreesR, double xO, double yO) {
-        /*
-         * Transform the object's position relative to the robot to the field's coordinate system.
-         *
-         * Parameters:
-         * xR, yR: Robot's position in the field's coordinate system
-         * degreesR: Robot's heading (in degrees) relative to the field
-         * xO, yO: Object's position relative to the robot (in robot's local coordinate system)
-         *
-         * Returns:
-         * (xField, yField): Object's position in the field's coordinate system
-         */
-
-        // Convert degrees to radians
-        double thetaR = Math.toRadians(degreesR);
-
-        // Create the rotation matrix based on robot's heading
-        double[][] rotationMatrix = new double[][]{
-                {Math.cos(thetaR), -Math.sin(thetaR)},
-                {Math.sin(thetaR), Math.cos(thetaR)}
-        };
-
-        // Rotate the object's local coordinates relative to the robot
-        double objectRotatedX = rotationMatrix[0][0] * xO + rotationMatrix[0][1] * yO;
-        double objectRotatedY = rotationMatrix[1][0] * xO + rotationMatrix[1][1] * yO;
-
-        // Translate by the robot's position in the field's coordinate system
-        double xField = xR + objectRotatedX;
-        double yField = yR + objectRotatedY;
-        ArrayList<Double> coordinates = new ArrayList<>();
-        coordinates.add(xField);
-        coordinates.add(yField);
-        // Return the result as an array
-        return coordinates;
-    }
+        private Point onScreen2RealWorld(Point centroid){
+            boolean xIsNegative = false;
+            double yAngleDown = ( (centroid.y - this.screenCenterY) /this.screenCenterY)*60;
+            double xAngle = ( (centroid.x - this.screenCenterX) /this.screenCenterX)*60;
+            if( xAngle <0){
+                xIsNegative = true;
+                xAngle = -xAngle;
+            }
+            double yRealWorld =  distanceOffGround/Math.tan(Math.toRadians(yAngleDown));
+            double xRealWorld = Math.tan(xAngle)*yRealWorld;
+            if(xIsNegative)
+                xRealWorld = -xRealWorld;
+            return transformPosition(new  Point(position.get(0), position.get(1)), position.get(2),new Point( xRealWorld,yRealWorld));
 
 
-    private double angle3pt(List<Integer> a,List<Integer> b, List<Double> c){
-        double angle = Math.toDegrees(
-                Math.atan2(c.get(1)-b.get(1), c.get(0)- b.get(0)) -Math.atan2(a.get(1)-b.get(1),
-                        a.get(0)-b.get(0)));
-        if( angle<0){
-            return 360+angle;
+
+        }
+        private Point transformPosition(Point robot, double degreesR, Point offset) {
+            /*
+             * Transform the object's position relative to the robot to the field's coordinate system.
+             *
+             * Parameters:
+             * xR, yR: Robot's position in the field's coordinate system
+             * degreesR: Robot's heading (in degrees) relative to the field
+             * xO, yO: Object's position relative to the robot (in robot's local coordinate system)
+             *
+             * Returns:
+             * (xField, yField): Object's position in the field's coordinate system
+             */
+
+            // Convert degrees to radians
+            double thetaR = Math.toRadians(degreesR);
+
+            // Create the rotation matrix based on robot's heading
+            double[][] rotationMatrix = new double[][]{
+                    {Math.cos(thetaR), -Math.sin(thetaR)},
+                    {Math.sin(thetaR), Math.cos(thetaR)}
+            };
+
+            // Rotate the object's local coordinates relative to the robot
+            double objectRotatedX = rotationMatrix[0][0] * offset.x + rotationMatrix[0][1] * offset.y;
+            double objectRotatedY = rotationMatrix[1][0] * offset.x + rotationMatrix[1][1] * offset.y;
+
+            // Translate by the robot's position in the field's coordinate system
+            double xField = robot.x + objectRotatedX;
+            double yField = robot.y + objectRotatedY;
+            ArrayList<Double> coordinates = new ArrayList<>();
+            coordinates.add(xField);
+            coordinates.add(yField);
+            // Return the result as an array
+            return new Point(xField,yField);
+        }
+        private double angle3pt(Point a,Point b, Point c){
+            double angle = Math.toDegrees(
+                    Math.atan2(c.y-b.y, c.x- b.x) -Math.atan2(a.y-b.y,
+                            a.x-b.x));
+            if( angle<0){
+                return 360+angle;
+            }
+            if(angle>180)
+                angle-=180;
+            return angle;
+        }
+        private Mat preprocess(Mat frame){
+            Mat hsvFrame = new Mat();
+            Imgproc.cvtColor(frame, hsvFrame,Imgproc.COLOR_BGR2HSV);
+            // Scalars used to detect the yellow samples
+            Scalar lowerYellow = new Scalar(5, 139, 109);
+            Scalar upperYellow = new Scalar(31, 255, 255);
+
+
+            Core.inRange(hsvFrame,lowerYellow,upperYellow,frame);
+
+            //Scalars used to detect the lower red of the samples
+
+
+
+            Point anchorPoint = new Point(0, 0);
+            Imgproc.erode(frame,frame, Imgproc.getStructuringElement(
+                    Imgproc.MORPH_RECT, new Size(5, 5)), anchorPoint,1);
+            Imgproc.dilate(frame,frame,Imgproc.getStructuringElement(
+                    Imgproc.MORPH_RECT, new Size(5, 5)),anchorPoint,1);
+            Imgproc.erode(frame,frame, Imgproc.getStructuringElement(
+                    Imgproc.MORPH_RECT, new Size(5, 5)), anchorPoint,1);
+            Imgproc.dilate(frame,frame,Imgproc.getStructuringElement(
+                    Imgproc.MORPH_RECT, new Size(5, 5)),anchorPoint,2);
+
+            return frame;
+
+
+
         }
 
-        return angle;
-    }
-    private ArrayList<MatOfPoint> getContours(Mat frame){
-        Mat hsvframe = new Mat();
-        Imgproc.cvtColor(frame, hsvframe,Imgproc.COLOR_BGR2HSV);
-        // Scalars used to detect the yellow samples
-        Scalar lowerYellow = new Scalar(5, 139, 109);
-        Scalar upperYellow = new Scalar(31, 255, 255);
-
-        Mat yellowMask = new Mat();
-        Core.inRange(hsvframe,lowerYellow,upperYellow,yellowMask);
-
-        //Scalars used to detect the lower red of the samples
-        Scalar lowerRed1 = new Scalar(0, 100, 100);
-        Scalar upperRed1 = new Scalar(10, 255, 255);
-
-        Mat LowerRedMask = new Mat();
-        Core.inRange(hsvframe,lowerRed1,upperRed1, LowerRedMask);
-
-        //Scalars used for the upper red of the samples
-        Scalar lowerRed2 = new Scalar(170, 100, 100);
-        Scalar upperRed2 = new Scalar(180, 255, 255);
-
-        Mat UpperRedMask = new Mat();
-        Core.inRange(hsvframe,lowerRed2,upperRed2,UpperRedMask);
-
-        Mat RedMask = new Mat();
-        Core.bitwise_or(UpperRedMask,LowerRedMask, RedMask);
-
-        Mat Mask = new Mat();
-        Core.bitwise_or(RedMask,yellowMask, Mask);
-
-
-        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(5, 5));
-        Point anchorPoint = new Point(0, 0);
-        Imgproc.erode(Mask,Mask, kernel, anchorPoint,1);
-        Imgproc.dilate(Mask,Mask,kernel,anchorPoint,1);
-        Imgproc.erode(Mask,Mask, kernel, anchorPoint,1);
-        Imgproc.dilate(Mask,Mask,kernel,anchorPoint,2);
-
-        ArrayList<MatOfPoint> contours = new ArrayList<>();
-        Imgproc.findContours(Mask, contours,new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
-
-        return contours;
-
-
-
     }
 
-    }
 }
-
