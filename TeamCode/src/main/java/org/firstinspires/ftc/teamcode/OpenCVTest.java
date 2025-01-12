@@ -1,3 +1,4 @@
+
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -31,7 +32,7 @@ import java.util.TreeMap;
 public class OpenCVTest extends LinearOpMode {
     final int width = 1920;
     final int height = 1080;
-    private OpenCvCamera controlHubCam;
+    private OpenCvCamera webcam1;
     private Point centroid = new Point();
     private  double angleOfRotation = 0;
     private List<Double> position = Arrays.asList(0.0, 0.0, 0.0);
@@ -58,7 +59,7 @@ public class OpenCVTest extends LinearOpMode {
 
             }
         }
-        controlHubCam.stopStreaming();
+        webcam1.stopStreaming();
     }
 
 
@@ -67,16 +68,23 @@ public class OpenCVTest extends LinearOpMode {
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier(
                 "cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
 
-        controlHubCam = OpenCvCameraFactory.getInstance().createWebcam(
-                hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
+        webcam1 =  OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam1"), cameraMonitorViewId);
 
+        webcam1.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
+            @Override
+            public void onOpened() {
+                telemetry.addLine("Camera Init Successful");
+                telemetry.update();
 
-        controlHubCam.setPipeline(new YellowSampleDetection());
+                webcam1.startStreaming(width, height, OpenCvCameraRotation.UPRIGHT);
+            }
 
-        controlHubCam.openCameraDevice();
-        controlHubCam.startStreaming(width, height, OpenCvCameraRotation.UPRIGHT);
-
-
+            @Override
+            public void onError(int errorCode) {
+                telemetry.addData("Error", errorCode);
+                telemetry.update();
+            }
+        });
     }
     class YellowSampleDetection extends OpenCvPipeline{
         final double width = 1920;
@@ -84,12 +92,14 @@ public class OpenCVTest extends LinearOpMode {
         final double screenCenterX = width/2;
         final double screenCenterY = height/2;
         final double distanceOffGround = 10.5;
+        Mat hsvFrame = new Mat();
+        Mat mask;
         @Override
         public Mat processFrame(Mat input){
             long startTime = System.nanoTime();
             List<List<Object>> samplesData = new ArrayList<>();
 
-            Mat mask = preprocess(input);
+            mask = preprocess(input);
             ArrayList<MatOfPoint> contours = new ArrayList<>();
             Imgproc.findContours(mask, contours, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 
@@ -112,6 +122,7 @@ public class OpenCVTest extends LinearOpMode {
                         for(Point point:points){
                             vertices.put(point.y, point.x);
                         }
+
                         List<Double> ysSorted = (List<Double>) vertices.keySet();
 
                         List<Point> pointsSorted = new ArrayList<>();
@@ -154,37 +165,37 @@ public class OpenCVTest extends LinearOpMode {
                         Point sampleCentroid = onScreen2RealWorld(centerOfSample);
                         singleSampleData.add(sampleCentroid);
                         if(longestLine.get(1).y<longestLine.get(0).y){
-                                Collections.reverse(longestLine);
+                            Collections.reverse(longestLine);
                         }
                         double sampleAngleOfRotation = angle3pt(longestLine.get(1),longestLine.get(0),
                                 new Point(width, longestLine.get(0).y));
                         singleSampleData.add(sampleAngleOfRotation);
                         samplesData.add(singleSampleData);
+                    }
                 }
             }
-        }
-        List<Object> closest = new ArrayList<>();
-        double shortestDistance = 0;
-        for(int i =0; i<samplesData.size();i++){
-            Point point = (Point) samplesData.get(0);
-            if(i==0){
-                closest = samplesData.get(i);
+            List<Object> closest = new ArrayList<>();
+            double shortestDistance = 0;
+            for(int i =0; i<samplesData.size();i++){
+                Point point = (Point) samplesData.get(0);
+                if(i==0){
+                    closest = samplesData.get(i);
 
-                shortestDistance =  Math.hypot(position.get(0) - point.x, position.get(1)-point.y);
-            }else{
-                if(shortestDistance>Math.hypot(position.get(0) - point.x, position.get(1)-point.y)){
-                    closest=samplesData.get(i);
-                    shortestDistance = Math.hypot(position.get(0) - point.x, position.get(1)-point.y);
+                    shortestDistance =  Math.hypot(position.get(0) - point.x, position.get(1)-point.y);
+                }else{
+                    if(shortestDistance>Math.hypot(position.get(0) - point.x, position.get(1)-point.y)){
+                        closest=samplesData.get(i);
+                        shortestDistance = Math.hypot(position.get(0) - point.x, position.get(1)-point.y);
+                    }
                 }
             }
-        }
-        if(closest.size==2){
-            centroid = (Point) closest.get(0);
-            angleOfRotation = (double) closest.get(0);
-        }
-        long endTime = System.nanoTime();
-        timeTakenMili = endTime-startTime;
-        return mask;
+            if(closest.size()==2){
+                centroid = (Point) closest.get(0);
+                angleOfRotation = (double) closest.get(0);
+            }
+            long endTime = System.nanoTime();
+            timeTakenMili = endTime-startTime;
+            return input;
         }
         private Point onScreen2RealWorld(Point centroid){
             boolean xIsNegative = false;
@@ -250,7 +261,6 @@ public class OpenCVTest extends LinearOpMode {
             return angle;
         }
         private Mat preprocess(Mat frame){
-            Mat hsvFrame = new Mat();
             Imgproc.cvtColor(frame, hsvFrame,Imgproc.COLOR_BGR2HSV);
             // Scalars used to detect the yellow samples
             Scalar lowerYellow = new Scalar(5, 139, 109);
@@ -263,15 +273,15 @@ public class OpenCVTest extends LinearOpMode {
 
 
 
-            
+            Point anchorPoint = new Point(0, 0);
             Imgproc.erode(frame,frame, Imgproc.getStructuringElement(
-                    Imgproc.MORPH_RECT, new Size(5, 5)), new Point(0, 0),1);
+                    Imgproc.MORPH_RECT, new Size(5, 5)), anchorPoint,1);
             Imgproc.dilate(frame,frame,Imgproc.getStructuringElement(
-                    Imgproc.MORPH_RECT, new Size(5, 5)),new Point(0, 0),1);
+                    Imgproc.MORPH_RECT, new Size(5, 5)),anchorPoint,1);
             Imgproc.erode(frame,frame, Imgproc.getStructuringElement(
-                    Imgproc.MORPH_RECT, new Size(5, 5)), new Point(0, 0),1);
+                    Imgproc.MORPH_RECT, new Size(5, 5)), anchorPoint,1);
             Imgproc.dilate(frame,frame,Imgproc.getStructuringElement(
-                    Imgproc.MORPH_RECT, new Size(5, 5)),new Point(0, 0),2);
+                    Imgproc.MORPH_RECT, new Size(5, 5)),anchorPoint,2);
 
             return frame;
 
