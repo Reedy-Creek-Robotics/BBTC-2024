@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import org.firstinspires.ftc.teamcode.modules.Robot;
+
 import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.*;
 import static com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.BRAKE;
 import static com.qualcomm.robotcore.hardware.DcMotorSimple.Direction.*;
@@ -27,6 +29,8 @@ public class TeleOpDrive extends LinearOpMode {
 
     int targetSlidePosition = 0;
     int targetArmPosition = 0;
+    // 0 = red, 1 = blue
+    int alliance = 0;
 
     double ly1;
     double lx1;
@@ -58,11 +62,11 @@ public class TeleOpDrive extends LinearOpMode {
 
     OpenCvCamera webcam1;
 
+    Robot bot;
+
     boolean pincherOpen;
     boolean hangPrimed = false;
     boolean hangInitiated = false;
-
-    RunStates intakePositions[] = RunStates.values();
 
     /*
     ToDo Get intakePositions working for setting the positions of all devices
@@ -112,7 +116,7 @@ public class TeleOpDrive extends LinearOpMode {
 
         // We check if the debouce is greater than the button delay to avoid one press being registered as many
         if(gamepad1.b && buttonDebounce.milliseconds() > buttonDelay) {
-            autoIntakeSample();
+            autoIntakeSample(alliance == 0 ? "red" : "blue");
             transferSample();
         }
 
@@ -134,6 +138,11 @@ public class TeleOpDrive extends LinearOpMode {
         currentGamepad1.copy(gamepad1);
         currentGamepad2.copy(gamepad2);
 
+        if(gamepad1.back && buttonDebounce.milliseconds() > buttonDelay){
+            alliance = 0;
+        } else if(gamepad1.start && buttonDebounce.milliseconds() > buttonDelay){
+            alliance = 1;
+        }
     }
 
     private void processTelemetry(){
@@ -188,19 +197,47 @@ public class TeleOpDrive extends LinearOpMode {
         basket = hardwareMap.get(Servo.class, "basket");
 
         claw = hardwareMap.get(Servo.class, "claw");
+
+        this.bot = new Robot(
+                driveFrontLeft,
+                driveBackLeft,
+                driveBackRight,
+                driveFrontRight,
+                outtakeSlide1,
+                outtakeSlide2,
+                intakeArm,
+                pincherRotator,
+                intakeRotator,
+                intakeSlide,
+                basket,
+                pincher,
+                claw,
+                telemetry,
+                webcam1,
+                this
+        );
     }
 
 
     // Action Methods
 
-     void autoIntakeSample(){
+     void autoIntakeSample(String color){
          //ToDo Find the math required to get the offset from the robot to the sample, taking into account the extra distance at the end of the intake slide
-         // Get and return location of nearest yellow sample
+
+         if(color == "yellow"){
+             //ToDo Get the location of the nearest yellow sample
+         } else if(color == "blue") {
+             //ToDo Get the location of the nearest blue sample
+         } else {
+             //ToDo Get the location of the nearest red sample
+         }
          double targetX = 0;
          double targetY = 0;
+
+         bot.runIntake(RunStates.HOLD, 1);
      }
      void transferSample(){
-
+         bot.runIntake(RunStates.TRANSFER, 1);
      }
 
 
