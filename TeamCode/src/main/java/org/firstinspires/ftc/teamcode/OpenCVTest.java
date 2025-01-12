@@ -184,7 +184,7 @@ public class OpenCVTest extends LinearOpMode {
         }
         long endTime = System.nanoTime();
         timeTakenMili = endTime-startTime;
-        return input;
+        return mask;
         }
         private Point onScreen2RealWorld(Point centroid){
             boolean xIsNegative = false;
@@ -263,15 +263,15 @@ public class OpenCVTest extends LinearOpMode {
 
 
 
-            Point anchorPoint = new Point(0, 0);
+            
             Imgproc.erode(frame,frame, Imgproc.getStructuringElement(
-                    Imgproc.MORPH_RECT, new Size(5, 5)), anchorPoint,1);
+                    Imgproc.MORPH_RECT, new Size(5, 5)), new Point(0, 0),1);
             Imgproc.dilate(frame,frame,Imgproc.getStructuringElement(
-                    Imgproc.MORPH_RECT, new Size(5, 5)),anchorPoint,1);
+                    Imgproc.MORPH_RECT, new Size(5, 5)),new Point(0, 0),1);
             Imgproc.erode(frame,frame, Imgproc.getStructuringElement(
-                    Imgproc.MORPH_RECT, new Size(5, 5)), anchorPoint,1);
+                    Imgproc.MORPH_RECT, new Size(5, 5)), new Point(0, 0),1);
             Imgproc.dilate(frame,frame,Imgproc.getStructuringElement(
-                    Imgproc.MORPH_RECT, new Size(5, 5)),anchorPoint,2);
+                    Imgproc.MORPH_RECT, new Size(5, 5)),new Point(0, 0),2);
 
             return frame;
 
