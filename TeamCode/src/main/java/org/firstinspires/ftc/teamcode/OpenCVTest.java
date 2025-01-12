@@ -93,13 +93,13 @@ public class OpenCVTest extends LinearOpMode {
         final double screenCenterY = height/2;
         final double distanceOffGround = 10.5;
         Mat hsvFrame = new Mat();
-        Mat mask;
+        Mat mask = new Mat();
         @Override
         public Mat processFrame(Mat input){
             long startTime = System.nanoTime();
             List<List<Object>> samplesData = new ArrayList<>();
+            preprocess(input);
 
-            mask = preprocess(input);
             ArrayList<MatOfPoint> contours = new ArrayList<>();
             Imgproc.findContours(mask, contours, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 
@@ -134,9 +134,9 @@ public class OpenCVTest extends LinearOpMode {
                         Point secondHighestPoint = pointsSorted.get(1);
                         Point thirdHighestPoint = pointsSorted.get(2);
 
-                        Imgproc.drawMarker(input, firstHighestPoint,new Scalar(255,0,0));
-                        Imgproc.drawMarker(input, secondHighestPoint,new Scalar(255,0,0));
-                        Imgproc.drawMarker(input, thirdHighestPoint,new Scalar(255,0,0));
+                        //Imgproc.drawMarker(input, firstHighestPoint,new Scalar(255,0,0));
+                        //Imgproc.drawMarker(input, secondHighestPoint,new Scalar(255,0,0));
+                        //Imgproc.drawMarker(input, thirdHighestPoint,new Scalar(255,0,0));
 
 
                         List<Point> longestLine = new ArrayList<>();
@@ -260,30 +260,28 @@ public class OpenCVTest extends LinearOpMode {
                 angle-=180;
             return angle;
         }
-        private Mat preprocess(Mat frame){
+        private void preprocess(Mat frame){
             Imgproc.cvtColor(frame, hsvFrame,Imgproc.COLOR_BGR2HSV);
             // Scalars used to detect the yellow samples
             Scalar lowerYellow = new Scalar(5, 139, 109);
             Scalar upperYellow = new Scalar(31, 255, 255);
 
 
-            Core.inRange(hsvFrame,lowerYellow,upperYellow,frame);
+            Core.inRange(hsvFrame,lowerYellow,upperYellow,mask);
 
             //Scalars used to detect the lower red of the samples
 
 
 
-            Point anchorPoint = new Point(0, 0);
-            Imgproc.erode(frame,frame, Imgproc.getStructuringElement(
+            Point anchorPoint = new Point(-1, -1);
+            Imgproc.erode(mask,mask, Imgproc.getStructuringElement(
                     Imgproc.MORPH_RECT, new Size(5, 5)), anchorPoint,1);
-            Imgproc.dilate(frame,frame,Imgproc.getStructuringElement(
+            Imgproc.dilate(mask,mask,Imgproc.getStructuringElement(
                     Imgproc.MORPH_RECT, new Size(5, 5)),anchorPoint,1);
-            Imgproc.erode(frame,frame, Imgproc.getStructuringElement(
+            Imgproc.erode(mask,mask, Imgproc.getStructuringElement(
                     Imgproc.MORPH_RECT, new Size(5, 5)), anchorPoint,1);
-            Imgproc.dilate(frame,frame,Imgproc.getStructuringElement(
+            Imgproc.dilate(mask,mask,Imgproc.getStructuringElement(
                     Imgproc.MORPH_RECT, new Size(5, 5)),anchorPoint,2);
-
-            return frame;
 
 
 
