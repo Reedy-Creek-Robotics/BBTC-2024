@@ -37,12 +37,7 @@ public class OpenCVTest extends LinearOpMode {
     private List<Double> position = Arrays.asList(0.0, 0.0, 0.0);
 
     private double timeTakenMili;
-
-
-    List<Double> closest;
-    double distance;
-
-    private void getPosition() {
+    private void updatePosition() {
         position = Arrays.asList(0.0, 0.0, 0.0);
     }
 
@@ -56,7 +51,7 @@ public class OpenCVTest extends LinearOpMode {
 
 
         while (opModeIsActive()) {
-
+            updatePosition();
             if (gamepad1.x) {
                 telemetry.addData("Closest Sample [x,y, rotation]: ", Arrays.asList(centroid.x,centroid.y,angleOfRotation));
                 telemetry.addData("time taken for image process: ", timeTakenMili);
@@ -89,10 +84,10 @@ public class OpenCVTest extends LinearOpMode {
         final double screenCenterX = width/2;
         final double screenCenterY = height/2;
         final double distanceOffGround = 10.5;
-        List<ArrayList<Double>>  samples = new ArrayList<>();
         @Override
         public Mat processFrame(Mat input){
             long startTime = System.nanoTime();
+            List<List<Object>> samplesData = new ArrayList<>();
 
             Mat mask = preprocess(input);
             ArrayList<MatOfPoint> contours = new ArrayList<>();
@@ -155,20 +150,36 @@ public class OpenCVTest extends LinearOpMode {
                         Point centerOfSample = new Point((secondHighestPoint.x+thirdHighestPoint.x)/2,
                                 (secondHighestPoint.y+thirdHighestPoint.y)/2);
                         Imgproc.drawMarker(input, centerOfSample, new Scalar(255,255,0));
-
-                        centroid = onScreen2RealWorld(centerOfSample);
-
+                        List<Object> singleSampleData = new ArrayList<>();
+                        Point sampleCentroid = onScreen2RealWorld(centerOfSample);
+                        singleSampleData.add(sampleCentroid);
                         if(longestLine.get(1).y<longestLine.get(0).y){
                                 Collections.reverse(longestLine);
-
-
-                    }
-                    angleOfRotation = angle3pt(longestLine.get(1),longestLine.get(0), new Point(width, longestLine.get(0).y));
+                        }
+                        double sampleAngleOfRotation = angle3pt(longestLine.get(1),longestLine.get(0),
+                                new Point(width, longestLine.get(0).y));
+                        singleSampleData.add(sampleAngleOfRotation);
+                        samplesData.add(singleSampleData);
                 }
             }
-
-
         }
+        List<Object> closest = new ArrayList<>();
+        double shortestDistance = 0;
+        for(int i =0; i<samplesData.size();i++){
+            Point point = (Point) samplesData.get(0);
+            if(i==0){
+                closest = samplesData.get(i);
+
+                shortestDistance =  Math.hypot(position.get(0) - point.x, position.get(1)-point.y);
+            }else{
+                if(shortestDistance>Math.hypot(position.get(0) - point.x, position.get(1)-point.y)){
+                    closest=samplesData.get(i);
+                    shortestDistance = Math.hypot(position.get(0) - point.x, position.get(1)-point.y);
+                }
+            }
+        }
+        centroid = (Point) closest.get(0);
+        angleOfRotation = (double) closest.get(0);
         long endTime = System.nanoTime();
         timeTakenMili = endTime-startTime;
         return input;
