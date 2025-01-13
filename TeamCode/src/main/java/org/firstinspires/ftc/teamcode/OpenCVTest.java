@@ -53,6 +53,7 @@ public class OpenCVTest extends LinearOpMode {
 
         while (opModeIsActive()) {
             updatePosition();
+            telemetry.addData("Max FPS",webcam1.getFps());
             if (gamepad1.x) {
                 telemetry.addData("Closest Sample [x,y, rotation]: ", Arrays.asList(centroid.x,centroid.y,angleOfRotation));
                 telemetry.addData("time taken for image process: ", timeTakenMili);
@@ -76,6 +77,7 @@ public class OpenCVTest extends LinearOpMode {
                 telemetry.addLine("Camera Init Successful");
                 telemetry.update();
                 
+                telemetry.addData("Max FPS",webcam1.getCurrentPipelineMaxFps());
                 webcam1.setPipeline(new YellowSampleDetection());
                 webcam1.startStreaming(width, height, OpenCvCameraRotation.UPRIGHT);
             }
