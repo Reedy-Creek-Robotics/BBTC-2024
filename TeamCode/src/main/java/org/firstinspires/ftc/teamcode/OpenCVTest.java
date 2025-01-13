@@ -75,7 +75,8 @@ public class OpenCVTest extends LinearOpMode {
             public void onOpened() {
                 telemetry.addLine("Camera Init Successful");
                 telemetry.update();
-
+                
+                webcam1.setPipeline(new YellowSampleDetection());
                 webcam1.startStreaming(width, height, OpenCvCameraRotation.UPRIGHT);
             }
 
