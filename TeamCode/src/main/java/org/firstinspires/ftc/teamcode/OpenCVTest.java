@@ -1,12 +1,24 @@
 
 package org.firstinspires.ftc.teamcode;
 
+import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
+
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.robotcore.external.function.Consumer;
+import org.firstinspires.ftc.robotcore.external.function.Continuation;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.CameraControl;
+import org.firstinspires.ftc.robotcore.internal.camera.calibration.CameraCalibration;
+import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.vision.VisionProcessor;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
@@ -25,6 +37,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 
@@ -36,7 +49,7 @@ public class OpenCVTest extends LinearOpMode {
     private Point centroid = new Point();
     private  double angleOfRotation = 0;
     private List<Double> position = Arrays.asList(0.0, 0.0, 0.0);
-
+    private VisionPortal visionPortal;
     private double timeTakenMili;
     private void updatePosition() {
         position = Arrays.asList(0.0, 0.0, 0.0);
@@ -46,141 +59,151 @@ public class OpenCVTest extends LinearOpMode {
     public void runOpMode() {
         HardwareMap hwmap = hardwareMap;
         initOpenCV();
-
+        //Gamepad gamepad1 = new Gamepad();
         waitForStart();
-        Gamepad gamepad1 = new Gamepad();
-
 
         while (opModeIsActive()) {
-            updatePosition();
-            telemetry.addData("Max FPS",webcam1.getFps());
-            if (gamepad1.x) {
-                telemetry.addData("Closest Sample [x,y, rotation]: ", Arrays.asList(centroid.x,centroid.y,angleOfRotation));
-                telemetry.addData("time taken for image process: ", timeTakenMili);
 
+            telemetry.addData("Closest Sample [x,y, rotation]: ", Arrays.asList(centroid.x,centroid.y,angleOfRotation));
+            telemetry.addData("time taken for image process: ", timeTakenMili);
+
+            if(gamepad1.x) {
+                telemetry.update();
             }
+
         }
-        webcam1.stopStreaming();
+
+        visionPortal.close();
+
     }
 
 
     private void initOpenCV() {
-
-        int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier(
-                "cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
-
-        webcam1 =  OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam1"), cameraMonitorViewId);
-
-        webcam1.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
-            @Override
-            public void onOpened() {
-                telemetry.addLine("Camera Init Successful");
-                telemetry.update();
-                
-                telemetry.addData("Max FPS",webcam1.getCurrentPipelineMaxFps());
-                webcam1.setPipeline(new YellowSampleDetection());
-                webcam1.startStreaming(width, height, OpenCvCameraRotation.UPRIGHT);
-            }
-
-            @Override
-            public void onError(int errorCode) {
-                telemetry.addData("Error", errorCode);
-                telemetry.update();
-            }
-        });
+        visionPortal = new VisionPortal.Builder().
+                addProcessor(new YellowVisionPortal())
+                .setCameraResolution(new android.util.Size(1920, 1080))
+                .setCamera(hardwareMap.get(WebcamName.class, "Webcam1"))
+                .setStreamFormat(VisionPortal.StreamFormat.MJPEG)
+                .build();
     }
-    class YellowSampleDetection extends OpenCvPipeline{
+
+    class YellowVisionPortal implements VisionProcessor{
         final double width = 1920;
         final double height = 1080;
         final double screenCenterX = width/2;
         final double screenCenterY = height/2;
-        final double distanceOffGround = 10.5;
+        final double distanceOffGround = 8.9;
         Mat hsvFrame = new Mat();
         Mat mask = new Mat();
+
         @Override
-        public Mat processFrame(Mat input){
+        public void init(int width, int height, CameraCalibration calibration) {
+
+        }
+        @Override
+        public Object processFrame(Mat frame, long captureTimeNanos) {
             long startTime = System.nanoTime();
             List<List<Object>> samplesData = new ArrayList<>();
-            preprocess(input);
+            preprocess(frame);
 
             ArrayList<MatOfPoint> contours = new ArrayList<>();
             Imgproc.findContours(mask, contours, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 
-            Imgproc.drawContours(input, contours, -1, new Scalar(0,0,255));
+
 
             for(MatOfPoint c: contours){
-                if(Imgproc.contourArea(c)>15000){
-                    MatOfPoint2f c2f = new MatOfPoint2f(c.toArray());
-                    double epsilon = 0.0129032258 * Imgproc.arcLength(c2f, true);
-                    MatOfPoint2f approx = new MatOfPoint2f();
-                    Imgproc.approxPolyDP(c2f, approx, epsilon, true);
+                if(Imgproc.contourArea(c)>1000){
+                MatOfPoint2f c2f = new MatOfPoint2f(c.toArray());
+                double epsilon = 0.0129032258 * Imgproc.arcLength(c2f, true);
+                MatOfPoint2f approx = new MatOfPoint2f();
+                Imgproc.approxPolyDP(c2f, approx, epsilon, true);
 
-                    List<Point> points = new ArrayList<>();
-                    for (int j = 0; j < approx.rows(); j++){
-                        points.add(approx.toList().get(j));
+                List<Point> points = new ArrayList<>();
+                for (int j = 0; j < approx.rows(); j++){
+                    points.add(approx.toList().get(j));
+                }
+
+                if(points.size()>4 && points.size()<=6){
+                    Imgproc.drawContours(frame, Collections.singletonList(c), -1, new Scalar(0,0,255));
+
+                    List<Point> longestLine = new ArrayList<>();
+                    double longestDistance = 0.0;
+                    for(int i =1; i < points.size(); i++) {
+                        if (i == 1) {
+                            longestLine.add(points.get(0));
+                            longestLine.add(points.get(1));
+                            longestDistance = Math.hypot(points.get(i).x - points.get(0).x, points.get(i).y - points.get(0).y);
+                        } else {
+                            if (longestDistance < Math.hypot(points.get(i).x - points.get(i - 1).x, points.get(i).y - points.get(i - 1).y)) {
+                                longestDistance = Math.hypot(points.get(i).x - points.get(i - 1).x, points.get(i).y - points.get(i - 1).y);
+                                longestLine.clear();
+                                longestLine.add(points.get(i - 1));
+                                longestLine.add(points.get(i));
+                            }
+                        }
                     }
 
-                    if(points.size()>4 && points.size()<=6){
-                        Map<Double,Double> vertices = new TreeMap<>();
-                        for(Point point:points){
-                            vertices.put(point.y, point.x);
+
+                    List<Point> secondLongestLine = new ArrayList<>();
+                    double secondLongestDistance = 0;
+                    boolean initUsed = false;
+                    for(int i =1; i < points.size(); i++) {
+                        if (!initUsed  && !longestLine.contains(points.get(i))) {
+                            secondLongestLine.add(points.get(i));
+                            secondLongestLine.add(points.get(i-1));
+                            secondLongestDistance = Math.hypot(points.get(i).x - points.get(0).x, points.get(i).y - points.get(0).y);
+                            initUsed = true;
+                        } else {
+                            if (secondLongestDistance < Math.hypot(points.get(i).x - points.get(i - 1).x, points.get(i).y - points.get(i - 1).y) && !longestLine.contains(points.get(i))) {
+                                secondLongestDistance = Math.hypot(points.get(i).x - points.get(i - 1).x, points.get(i).y - points.get(i - 1).y);
+                                secondLongestLine.clear();
+                                secondLongestLine.add(points.get(i - 1));
+                                secondLongestLine.add(points.get(i));
+                            }
                         }
+                    }
 
-                        List<Double> ysSorted = (List<Double>) vertices.keySet();
+                    List<Point> lineUsed = longestLine;
+                    if((longestLine.get(0).y-longestLine.get(1).y)/2>(secondLongestLine.get(0).y-secondLongestLine.get(1).y)/2){
+                        lineUsed = secondLongestLine;
+                    }
 
-                        List<Point> pointsSorted = new ArrayList<>();
-                        for(Double val:ysSorted){
-                            pointsSorted.add(new Point(vertices.get(val), val));
-                        }
-
-                        Point firstHighestPoint = pointsSorted.get(0);
-                        Point secondHighestPoint = pointsSorted.get(1);
-                        Point thirdHighestPoint = pointsSorted.get(2);
-
-                        //Imgproc.drawMarker(input, firstHighestPoint,new Scalar(255,0,0));
-                        //Imgproc.drawMarker(input, secondHighestPoint,new Scalar(255,0,0));
-                        //Imgproc.drawMarker(input, thirdHighestPoint,new Scalar(255,0,0));
-
-
-                        List<Point> longestLine = new ArrayList<>();
-                        double longestDistance = 0.0;
-                        for(int i =1; i < points.size(); i++){
-                            if(i==1){
-                                longestLine.add(points.get(0));
-                                longestLine.add(points.get(1));
-                                longestDistance = Math.hypot(points.get(i).x - points.get(0).x,points.get(i).y - points.get(0).y);
-                            }else{
-                                if(longestDistance<Math.hypot(points.get(i).x - points.get(i-1).x,points.get(i).y - points.get(i-1).y)){
-                                    longestDistance = Math.hypot(points.get(i).x - points.get(i-1).x,points.get(i).y - points.get(i-1).y);
-                                    longestLine.clear();
-                                    longestLine.add(points.get(i-1));
-                                    longestLine.add(points.get(i));
-                                }
+                    if(lineUsed.get(1).y<lineUsed.get(0).y){
+                        Collections.reverse(lineUsed);
+                    }
+                    Point pointUsed = new Point();
+                    longestDistance = 0;
+                    for(int i=0;i<points.size(); i++){
+                        if(i==0){
+                            pointUsed = points.get(i);
+                            longestDistance = Math.hypot(points.get(i).x-lineUsed.get(0).x,points.get(i).y-lineUsed.get(0).y);
+                        }else{
+                            if(longestDistance< Math.hypot(points.get(i).x-lineUsed.get(0).x,points.get(i).y-lineUsed.get(0).y)){
+                                pointUsed = points.get(i);
+                                longestDistance  =  Math.hypot(points.get(i).x-lineUsed.get(0).x,points.get(i).y-lineUsed.get(0).y);
 
                             }
                         }
 
+                    }
 
-                        Point centerOfSample = new Point((secondHighestPoint.x+thirdHighestPoint.x)/2,
-                                (secondHighestPoint.y+thirdHighestPoint.y)/2);
-                        Imgproc.drawMarker(input, centerOfSample, new Scalar(255,255,0));
-                        List<Object> singleSampleData = new ArrayList<>();
-                        Point sampleCentroid = onScreen2RealWorld(centerOfSample);
-                        singleSampleData.add(sampleCentroid);
-                        if(longestLine.get(1).y<longestLine.get(0).y){
-                            Collections.reverse(longestLine);
-                        }
-                        double sampleAngleOfRotation = angle3pt(longestLine.get(1),longestLine.get(0),
-                                new Point(width, longestLine.get(0).y));
-                        singleSampleData.add(sampleAngleOfRotation);
-                        samplesData.add(singleSampleData);
+                    Point screencenter = new Point((lineUsed.get(1).x+pointUsed.x)/2, (lineUsed.get(1).y+pointUsed.y)/2);
+                    Point rWPos = onScreen2RealWorld(screencenter);
+                    List<Object> sampleData= new ArrayList<>();
+                    sampleData.add(rWPos);
+                    double angle = angle3pt(lineUsed.get(1), lineUsed.get(0), new Point(width,lineUsed.get(0).y));
+                    sampleData.add(angle);
+                    samplesData.add(sampleData);
                     }
                 }
             }
+
+
+
             List<Object> closest = new ArrayList<>();
             double shortestDistance = 0;
             for(int i =0; i<samplesData.size();i++){
-                Point point = (Point) samplesData.get(0);
+                Point point = (Point) samplesData.get(i).get(0);
                 if(i==0){
                     closest = samplesData.get(i);
 
@@ -191,19 +214,53 @@ public class OpenCVTest extends LinearOpMode {
                         shortestDistance = Math.hypot(position.get(0) - point.x, position.get(1)-point.y);
                     }
                 }
+
             }
+
             if(closest.size()==2){
                 centroid = (Point) closest.get(0);
-                angleOfRotation = (double) closest.get(0);
+                angleOfRotation = (double) closest.get(1);
             }
+            Imgproc.drawMarker(frame,centroid, new Scalar(255, 192, 203));
             long endTime = System.nanoTime();
-            timeTakenMili = endTime-startTime;
-            return input;
+            timeTakenMili = (endTime-startTime)/1000000;
+            telemetry.clearAll();
+            telemetry.addData("time", 6);
+            return mask;
+        }
+        @Override
+        public void onDrawFrame(Canvas canvas, int onscreenWidth, int onscreenHeight, float scaleBmpPxToCanvasPx, float scaleCanvasDensity, Object userContext) {
+            canvas.drawCircle(500,500, 4, new Paint(3));
+        }
+        private void preprocess(Mat frame){
+            Imgproc.cvtColor(frame, hsvFrame,Imgproc.COLOR_RGB2HSV);
+
+            // Scalars used to detect the yellow samples
+            Scalar lowerYellow = new Scalar(5, 139, 109);
+
+            Scalar upperYellow = new Scalar(31, 255, 255);
+
+
+            Core.inRange(hsvFrame,lowerYellow,upperYellow,mask);
+
+            //Scalars used to detect the lower red of the samples
+
+
+
+            Point anchorPoint = new Point(-1, -1);
+            Imgproc.erode(mask,mask, Imgproc.getStructuringElement(
+                    Imgproc.MORPH_RECT, new Size(10,10)), anchorPoint,1);
+            Imgproc.dilate(mask,mask,Imgproc.getStructuringElement(
+                    Imgproc.MORPH_RECT, new Size(10,10)),anchorPoint,1);
+
+
+
+
         }
         private Point onScreen2RealWorld(Point centroid){
             boolean xIsNegative = false;
-            double yAngleDown = ( (centroid.y - this.screenCenterY) /this.screenCenterY)*60;
-            double xAngle = ( (centroid.x - this.screenCenterX) /this.screenCenterX)*60;
+            double yAngleDown = 90-( (centroid.y - this.screenCenterY) /this.screenCenterY)*60;
+            double xAngle = 90-( (centroid.x - this.screenCenterX) /this.screenCenterX)*60;
             if( xAngle <0){
                 xIsNegative = true;
                 xAngle = -xAngle;
@@ -263,33 +320,8 @@ public class OpenCVTest extends LinearOpMode {
                 angle-=180;
             return angle;
         }
-        private void preprocess(Mat frame){
-            Imgproc.cvtColor(frame, hsvFrame,Imgproc.COLOR_BGR2HSV);
-            // Scalars used to detect the yellow samples
-            Scalar lowerYellow = new Scalar(5, 139, 109);
-            Scalar upperYellow = new Scalar(31, 255, 255);
-
-
-            Core.inRange(hsvFrame,lowerYellow,upperYellow,mask);
-
-            //Scalars used to detect the lower red of the samples
-
-
-
-            Point anchorPoint = new Point(-1, -1);
-            Imgproc.erode(mask,mask, Imgproc.getStructuringElement(
-                    Imgproc.MORPH_RECT, new Size(5, 5)), anchorPoint,1);
-            Imgproc.dilate(mask,mask,Imgproc.getStructuringElement(
-                    Imgproc.MORPH_RECT, new Size(5, 5)),anchorPoint,1);
-            Imgproc.erode(mask,mask, Imgproc.getStructuringElement(
-                    Imgproc.MORPH_RECT, new Size(5, 5)), anchorPoint,1);
-            Imgproc.dilate(mask,mask,Imgproc.getStructuringElement(
-                    Imgproc.MORPH_RECT, new Size(5, 5)),anchorPoint,2);
-
-
-
-        }
-
     }
+
+
 
 }
