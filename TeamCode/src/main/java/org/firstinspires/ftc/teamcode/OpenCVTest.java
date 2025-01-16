@@ -1,21 +1,14 @@
 
 package org.firstinspires.ftc.teamcode;
 
-import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
-
-import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import org.firstinspires.ftc.robotcore.external.function.Consumer;
-import org.firstinspires.ftc.robotcore.external.function.Continuation;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.CameraControl;
 import org.firstinspires.ftc.robotcore.internal.camera.calibration.CameraCalibration;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.VisionProcessor;
@@ -28,24 +21,15 @@ import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.openftc.easyopencv.OpenCvCamera;
-import org.openftc.easyopencv.OpenCvCameraFactory;
-import org.openftc.easyopencv.OpenCvCameraRotation;
-import org.openftc.easyopencv.OpenCvPipeline;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
 
 
 @TeleOp(name="OpenCV testing")
 public class OpenCVTest extends LinearOpMode {
-    final int width = 1920;
-    final int height = 1080;
-    private OpenCvCamera webcam1;
     private Point centroid = new Point();
     private  double angleOfRotation = 0;
     private List<Double> position = Arrays.asList(0.0, 0.0, 0.0);
@@ -63,7 +47,7 @@ public class OpenCVTest extends LinearOpMode {
         waitForStart();
 
         while (opModeIsActive()) {
-
+            updatePosition();
             telemetry.addData("Closest Sample [x,y, rotation]: ", Arrays.asList(centroid.x,centroid.y,angleOfRotation));
             telemetry.addData("time taken for image process: ", timeTakenMili);
 
@@ -235,7 +219,7 @@ public class OpenCVTest extends LinearOpMode {
             }
             Imgproc.drawMarker(frame,centroid, new Scalar(255, 192, 203));
             long endTime = System.nanoTime();
-            timeTakenMili = (endTime-startTime)/1000000;
+            timeTakenMili = (double) (endTime - startTime) /1000000;
             telemetry.clearAll();
             telemetry.addData("time", 6);
             return mask;
@@ -315,9 +299,7 @@ public class OpenCVTest extends LinearOpMode {
             // Translate by the robot's position in the field's coordinate system
             double xField = robot.x + objectRotatedX;
             double yField = robot.y + objectRotatedY;
-            ArrayList<Double> coordinates = new ArrayList<>();
-            coordinates.add(xField);
-            coordinates.add(yField);
+            
             // Return the result as an array
             return new Point(xField,yField);
         }
