@@ -79,12 +79,15 @@ public class OpenCVTest extends LinearOpMode {
 
 
     private void initOpenCV() {
+        YellowVisionPortal yellowVisionPortal = new YellowVisionPortal();
+        yellowVisionPortal.setROI(.25,.75,.5,1.0);
         visionPortal = new VisionPortal.Builder().
-                addProcessor(new YellowVisionPortal())
+                addProcessor(yellowVisionPortal)
                 .setCameraResolution(new android.util.Size(1920, 1080))
                 .setCamera(hardwareMap.get(WebcamName.class, "Webcam1"))
                 .setStreamFormat(VisionPortal.StreamFormat.MJPEG)
                 .build();
+
     }
 
     class YellowVisionPortal implements VisionProcessor{
@@ -95,6 +98,11 @@ public class OpenCVTest extends LinearOpMode {
         final double distanceOffGround = 8.9;
         Mat hsvFrame = new Mat();
         Mat mask = new Mat();
+        private double lowerX;
+        private double upperX;
+        private double lowerY;
+        private double upperY;
+
 
         @Override
         public void init(int width, int height, CameraCalibration calibration) {
@@ -122,6 +130,7 @@ public class OpenCVTest extends LinearOpMode {
                 for (int j = 0; j < approx.rows(); j++){
                     points.add(approx.toList().get(j));
                 }
+
 
                 if(points.size()>4 && points.size()<=6){
                     Imgproc.drawContours(frame, Collections.singletonList(c), -1, new Scalar(0,0,255));
@@ -188,6 +197,9 @@ public class OpenCVTest extends LinearOpMode {
                     }
 
                     Point screencenter = new Point((lineUsed.get(1).x+pointUsed.x)/2, (lineUsed.get(1).y+pointUsed.y)/2);
+                    if(screencenter.x<lowerX || screencenter.x>upperX || screencenter.y<lowerY || screencenter.y>upperY){
+                        continue;
+                    }
                     Point rWPos = onScreen2RealWorld(screencenter);
                     List<Object> sampleData= new ArrayList<>();
                     sampleData.add(rWPos);
@@ -319,6 +331,12 @@ public class OpenCVTest extends LinearOpMode {
             if(angle>180)
                 angle-=180;
             return angle;
+        }
+        public void setROI(double lowerX,double upperX,double lowerY,double upperY){
+            this.lowerX = lowerX*width;
+            this.upperX = upperX*width;
+            this.lowerY = lowerY*height;
+            this.upperY = upperY*height;
         }
     }
 
