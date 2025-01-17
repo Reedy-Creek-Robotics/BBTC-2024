@@ -12,7 +12,9 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.internal.camera.calibration.CameraCalibration;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.VisionProcessor;
+import org.opencv.calib3d.Calib3d;
 import org.opencv.core.Core;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
@@ -31,6 +33,8 @@ import java.util.List;
 public class samplePipeline extends LinearOpMode {
     YellowVisionPortal yellowVisionPortal;
     private VisionPortal visionPortal;
+    private Mat cameramatrix = new Mat(3, 3, CvType.CV_64F);
+    private Mat distCoeff = new Mat(1, 5, CvType.CV_64F);
     private void updatePosition() {
         yellowVisionPortal.position = Arrays.asList(0.0, 0.0, 0.0);
     }
@@ -38,6 +42,9 @@ public class samplePipeline extends LinearOpMode {
     @Override
     public void runOpMode() {
         HardwareMap hwmap = hardwareMap;
+        //TODO REPLACE WITH REAL CAMERA CALIBRATION DATA
+        cameramatrix.put(0, 0, 1.0, 0.0, 320.0, 0.0, 1.0, 240.0, 0.0, 0.0, 1.0);
+        distCoeff.put(0, 0, -0.2, 0.1, 0.0, 0.0, 0.0);
         initOpenCV();
         //Gamepad gamepad1 = new Gamepad();
         waitForStart();
@@ -57,8 +64,7 @@ public class samplePipeline extends LinearOpMode {
 
 
     private void initOpenCV() {
-        yellowVisionPortal = new YellowVisionPortal();
-        yellowVisionPortal.setROI(.25,.75,.5,1.0);
+        yellowVisionPortal = new YellowVisionPortal(.25,.75,.5,1, cameramatrix, distCoeff);
         visionPortal = new VisionPortal.Builder().
                 addProcessor(yellowVisionPortal)
                 .setCameraResolution(new android.util.Size(1920, 1080))
@@ -90,6 +96,26 @@ class YellowVisionPortal implements VisionProcessor{
     public double angleOfRotation = 0;
     public double timeTakenMili = 0;
     public List<Double> position = Arrays.asList(0.0, 0.0, 0.0);
+    private Mat cameraMatrix;
+    private Mat distCoeffs;
+    private Mat undistorted = new Mat();
+
+
+    public YellowVisionPortal(
+            double lowerX,
+            double upperX,
+            double lowerY,
+            double upperY,
+            Mat cameraMatrix,
+            Mat distCoeffs
+    ){
+        this.lowerX = lowerX*width;
+        this.upperX = upperX*width;
+        this.lowerY = lowerY*height;
+        this.upperY = upperY*height;
+        this.distCoeffs = distCoeffs;
+        this.cameraMatrix = cameraMatrix;
+    }
 
 
     @Override
@@ -98,10 +124,10 @@ class YellowVisionPortal implements VisionProcessor{
     }
     @Override
     public Object processFrame(Mat frame, long captureTimeNanos) {
+        Calib3d.undistort(frame,undistorted,cameraMatrix,distCoeffs);
         long startTime = System.nanoTime();
         List<List<Object>> samplesData = new ArrayList<>();
-        preprocess(frame);
-
+        preprocess(undistorted);
         ArrayList<MatOfPoint> contours = new ArrayList<>();
         Imgproc.findContours(mask, contours, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 
@@ -232,6 +258,7 @@ class YellowVisionPortal implements VisionProcessor{
         canvas.drawCircle(500,500, 4, new Paint(3));
     }
     private void preprocess(Mat frame){
+
         Imgproc.cvtColor(frame, hsvFrame,Imgproc.COLOR_RGB2HSV);
 
         // Scalars used to detect the yellow samples
@@ -317,10 +344,5 @@ class YellowVisionPortal implements VisionProcessor{
             angle-=180;
         return angle;
     }
-    public void setROI(double lowerX,double upperX,double lowerY,double upperY){
-        this.lowerX = lowerX*width;
-        this.upperX = upperX*width;
-        this.lowerY = lowerY*height;
-        this.upperY = upperY*height;
-    }
+
 }
