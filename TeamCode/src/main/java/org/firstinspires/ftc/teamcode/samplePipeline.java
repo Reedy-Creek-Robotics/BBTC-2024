@@ -33,8 +33,7 @@ import java.util.List;
 public class samplePipeline extends LinearOpMode {
     YellowVisionPortal yellowVisionPortal;
     private VisionPortal visionPortal;
-    private Mat cameramatrix = new Mat(3, 3, CvType.CV_64F);
-    private Mat distCoeff = new Mat(1, 5, CvType.CV_64F);
+
     private void updatePosition() {
         yellowVisionPortal.position = Arrays.asList(0.0, 0.0, 0.0);
     }
@@ -42,9 +41,7 @@ public class samplePipeline extends LinearOpMode {
     @Override
     public void runOpMode() {
         HardwareMap hwmap = hardwareMap;
-        //TODO REPLACE WITH REAL CAMERA CALIBRATION DATA
-        cameramatrix.put(0, 0, 1.0, 0.0, 320.0, 0.0, 1.0, 240.0, 0.0, 0.0, 1.0);
-        distCoeff.put(0, 0, -0.2, 0.1, 0.0, 0.0, 0.0);
+
         initOpenCV();
         //Gamepad gamepad1 = new Gamepad();
         waitForStart();
@@ -64,7 +61,7 @@ public class samplePipeline extends LinearOpMode {
 
 
     private void initOpenCV() {
-        yellowVisionPortal = new YellowVisionPortal(.25,.75,.5,1, cameramatrix, distCoeff);
+        yellowVisionPortal = new YellowVisionPortal(.25,.75,.5,1);
         visionPortal = new VisionPortal.Builder().
                 addProcessor(yellowVisionPortal)
                 .setCameraResolution(new android.util.Size(1920, 1080))
@@ -96,8 +93,8 @@ class YellowVisionPortal implements VisionProcessor{
     public double angleOfRotation = 0;
     public double timeTakenMili = 0;
     public List<Double> position = Arrays.asList(0.0, 0.0, 0.0);
-    private Mat cameraMatrix;
-    private Mat distCoeffs;
+    private Mat cameraMatrix = new Mat();
+    private Mat distCoeffs = new Mat();
     private Mat undistorted = new Mat();
 
 
@@ -105,16 +102,17 @@ class YellowVisionPortal implements VisionProcessor{
             double lowerX,
             double upperX,
             double lowerY,
-            double upperY,
-            Mat cameraMatrix,
-            Mat distCoeffs
+            double upperY
     ){
         this.lowerX = lowerX*width;
         this.upperX = upperX*width;
         this.lowerY = lowerY*height;
         this.upperY = upperY*height;
-        this.distCoeffs = distCoeffs;
-        this.cameraMatrix = cameraMatrix;
+        cameraMatrix.put(0, 0, 595.37521152, 0.0, 952.22722088,
+                         0.0 ,597.10091695, 488.29707956,
+                         0.0,           0.0,           1.0
+                );
+        distCoeffs.put(0, 0, -0.00593377, -0.00816853,  0.00092361, -0.00103652, -0.00245282);
     }
 
 
@@ -124,10 +122,10 @@ class YellowVisionPortal implements VisionProcessor{
     }
     @Override
     public Object processFrame(Mat frame, long captureTimeNanos) {
-        Calib3d.undistort(frame,undistorted,cameraMatrix,distCoeffs);
+        Calib3d.undistort(frame,frame,cameraMatrix,distCoeffs);
         long startTime = System.nanoTime();
         List<List<Object>> samplesData = new ArrayList<>();
-        preprocess(undistorted);
+        preprocess(frame);
         ArrayList<MatOfPoint> contours = new ArrayList<>();
         Imgproc.findContours(mask, contours, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 
@@ -251,7 +249,7 @@ class YellowVisionPortal implements VisionProcessor{
         Imgproc.drawMarker(frame,centroid, new Scalar(255, 192, 203));
         long endTime = System.nanoTime();
         timeTakenMili = (double) (endTime - startTime) /1000000;
-        return mask;
+        return frame;
     }
     @Override
     public void onDrawFrame(Canvas canvas, int onscreenWidth, int onscreenHeight, float scaleBmpPxToCanvasPx, float scaleCanvasDensity, Object userContext) {
