@@ -67,6 +67,8 @@ public class samplePipeline extends LinearOpMode {
                 .setCameraResolution(new android.util.Size(1920, 1080))
                 .setCamera(hardwareMap.get(WebcamName.class, "Webcam1"))
                 .setStreamFormat(VisionPortal.StreamFormat.MJPEG)
+                .setAutoStartStreamOnBuild(true)
+                .enableLiveView(true)
                 .build();
 
 
@@ -109,10 +111,11 @@ class YellowVisionPortal implements VisionProcessor{
         this.lowerY = lowerY*height;
         this.upperY = upperY*height;
         cameraMatrix.put(0, 0, 595.37521152, 0.0, 952.22722088,
-                         0.0 ,597.10091695, 488.29707956,
-                         0.0,           0.0,           1.0
-                );
+                0.0 ,597.10091695, 488.29707956,
+                0.0,           0.0,           1.0
+        );
         distCoeffs.put(0, 0, -0.00593377, -0.00816853,  0.00092361, -0.00103652, -0.00245282);
+
     }
 
 
