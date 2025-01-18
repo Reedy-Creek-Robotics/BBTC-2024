@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.tests;
 
 import org.firstinspires.ftc.teamcode.modules.Robot;
 
@@ -14,31 +14,14 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import org.openftc.easyopencv.OpenCvCamera;
 
-@TeleOp(name = "Tele-Op Driving")
-public class TeleOpDrive extends LinearOpMode {
+@TeleOp(name = "TEST Tele-Op")
+public class TestTeleOp extends LinearOpMode {
 
     ElapsedTime buttonDebounce;
-
-    static double PINCHER_OPEN = 0;
-    static double PINCHER_CLOSED = 0;
-    static double CLAW_OPEN = 0;
-    static double CLAW_CLOSED = 0;
-
-    static int buttonDelay = 250;
-    private int intakePosition = 0;
-
-    int targetSlidePosition = 0;
-    int targetArmPosition = 0;
-    // 0 = red, 1 = blue
-    int alliance = 0;
 
     double ly1;
     double lx1;
     double rx1;
-    double lt2;
-    double rt2;
-    double lt1;
-    double rt1;
 
     Gamepad currentGamepad1 = new Gamepad();
     Gamepad currentGamepad2 = new Gamepad();
@@ -52,31 +35,6 @@ public class TeleOpDrive extends LinearOpMode {
     DcMotor outtakeSlideLeft;
     DcMotor outtakeSlideRight;
 
-    Servo pincher;
-    Servo intakeSlide;
-    Servo intakeArm;
-    Servo pincherRotator;
-    Servo intakeRotator;
-    Servo basket;
-    Servo claw;
-
-    OpenCvCamera webcam1;
-
-    Robot bot;
-
-    boolean pincherOpen;
-    boolean hangPrimed = false;
-    boolean hangInitiated = false;
-
-    /*
-    ToDo Get intakePositions working for setting the positions of all devices
-
-    ToDo Set up automatic sample intake and transfer
-    ToDo Set up automatic sample outtake
-
-    ToDo Set up automatic specimen outtake
-     */
-
     @Override
     public void runOpMode() throws InterruptedException {
 
@@ -87,7 +45,7 @@ public class TeleOpDrive extends LinearOpMode {
         telemetry.addLine("> PRESS START");
         waitForStart();
 
-        while(opModeIsActive()) {
+        while (opModeIsActive()) {
 
             processVariableUpdates();
 
@@ -98,7 +56,7 @@ public class TeleOpDrive extends LinearOpMode {
         }
     }
 
-    private void processDriving(){
+    private void processDriving() {
 
         double denominator = Math.max(Math.abs(ly1) + Math.abs(lx1) + Math.abs(rx1), 1);
         double frontLeftPower = (ly1 + lx1 + rx1) / denominator;
@@ -113,18 +71,10 @@ public class TeleOpDrive extends LinearOpMode {
     }
 
     private void processControl() {
+        double slidePower = gamepad1.right_trigger - gamepad1.left_trigger;
 
-        // We check if the debouce is greater than the button delay to avoid one press being registered as many
-        if(gamepad1.b && buttonDebounce.milliseconds() > buttonDelay) {
-            autoIntakeSample(alliance == 0 ? "red" : "blue");
-            transferSample();
-        }
-
-        if (pincherOpen) {
-            pincher.setPosition(PINCHER_OPEN);
-        } else {
-            pincher.setPosition(PINCHER_CLOSED);
-        }
+        outtakeSlideLeft.setPower(slidePower);
+        outtakeSlideRight.setPower(slidePower);
     }
 
     private void processVariableUpdates() {
@@ -137,18 +87,14 @@ public class TeleOpDrive extends LinearOpMode {
         previousGamepad2.copy(currentGamepad2);
         currentGamepad1.copy(gamepad1);
         currentGamepad2.copy(gamepad2);
-
-        if(gamepad1.back && buttonDebounce.milliseconds() > buttonDelay){
-            alliance = 0;
-        } else if(gamepad1.start && buttonDebounce.milliseconds() > buttonDelay){
-            alliance = 1;
-        }
     }
 
     private void processTelemetry(){
+        telemetry.addData("Outtake Slide Position", (outtakeSlideLeft.getCurrentPosition() + outtakeSlideRight.getCurrentPosition()) / 2);
+        telemetry.update();
     }
 
-    private void initHardware() {
+    private void initHardware(){
         driveFrontLeft = hardwareMap.get(DcMotor.class, "driveFrontLeft");
         driveFrontLeft.setMode(STOP_AND_RESET_ENCODER);
         driveFrontLeft.setMode(RUN_USING_ENCODER);
@@ -181,64 +127,6 @@ public class TeleOpDrive extends LinearOpMode {
         outtakeSlideRight.setMode(STOP_AND_RESET_ENCODER);
         outtakeSlideRight.setMode(RUN_USING_ENCODER);
         outtakeSlideRight.setZeroPowerBehavior(BRAKE);
-
-
-        pincher = hardwareMap.get(Servo.class, "pincher");
-        pincherOpen = false;
-
-        intakeArm = hardwareMap.get(Servo.class, "intakeArm");
-
-        pincherRotator = hardwareMap.get(Servo.class, "pincherRotator");
-
-        intakeRotator = hardwareMap.get(Servo.class, "intakeRotator");
-
-        intakeSlide = hardwareMap.get(Servo.class, "intakeSlide");
-
-        basket = hardwareMap.get(Servo.class, "basket");
-
-        claw = hardwareMap.get(Servo.class, "claw");
-
-        this.bot = new Robot(
-                driveFrontLeft,
-                driveBackLeft,
-                driveBackRight,
-                driveFrontRight,
-                outtakeSlideLeft,
-                outtakeSlideRight,
-                intakeArm,
-                pincherRotator,
-                intakeRotator,
-                intakeSlide,
-                basket,
-                pincher,
-                claw,
-                telemetry,
-                webcam1,
-                this
-        );
+        outtakeSlideRight.setDirection(REVERSE);
     }
-
-
-    // Action Methods
-
-     void autoIntakeSample(String color){
-         //ToDo Find the math required to get the offset from the robot to the sample, taking into account the extra distance at the end of the intake slide
-
-         if(color == "yellow"){
-             //ToDo Get the location of the nearest yellow sample
-         } else if(color == "blue") {
-             //ToDo Get the location of the nearest blue sample
-         } else {
-             //ToDo Get the location of the nearest red sample
-         }
-         double targetX = 0;
-         double targetY = 0;
-
-         bot.runIntake(RunStates.HOLD, 1);
-     }
-     void transferSample(){
-         bot.runIntake(RunStates.TRANSFER, 1);
-     }
-
-
 }
