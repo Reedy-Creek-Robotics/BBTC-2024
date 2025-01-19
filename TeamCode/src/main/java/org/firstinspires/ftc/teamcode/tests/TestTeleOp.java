@@ -32,8 +32,8 @@ public class TestTeleOp extends LinearOpMode {
     DcMotor driveFrontRight;
     DcMotor driveBackLeft;
     DcMotor driveBackRight;
-    DcMotor outtakeSlideLeft;
     DcMotor outtakeSlideRight;
+    DcMotor outtakeSlideLeft;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -73,8 +73,8 @@ public class TestTeleOp extends LinearOpMode {
     private void processControl() {
         double slidePower = gamepad1.right_trigger - gamepad1.left_trigger;
 
-        outtakeSlideLeft.setPower(slidePower);
         outtakeSlideRight.setPower(slidePower);
+        outtakeSlideLeft.setPower(slidePower);
     }
 
     private void processVariableUpdates() {
@@ -90,7 +90,7 @@ public class TestTeleOp extends LinearOpMode {
     }
 
     private void processTelemetry(){
-        telemetry.addData("Outtake Slide Position", (outtakeSlideLeft.getCurrentPosition() + outtakeSlideRight.getCurrentPosition()) / 2);
+        telemetry.addData("Outtake Slide Position", (outtakeSlideRight.getCurrentPosition() + outtakeSlideLeft.getCurrentPosition()) / 2);
         telemetry.update();
     }
 
@@ -117,16 +117,15 @@ public class TestTeleOp extends LinearOpMode {
         driveBackRight.setMode(RUN_USING_ENCODER);
         driveBackRight.setZeroPowerBehavior(BRAKE);
 
+        outtakeSlideRight = hardwareMap.get(DcMotor.class, "outtakeSlideRight");
+        outtakeSlideRight.setMode(STOP_AND_RESET_ENCODER);
+        outtakeSlideRight.setMode(RUN_USING_ENCODER);
+        outtakeSlideRight.setZeroPowerBehavior(BRAKE);
+
         outtakeSlideLeft = hardwareMap.get(DcMotor.class, "outtakeSlideLeft");
         outtakeSlideLeft.setMode(STOP_AND_RESET_ENCODER);
         outtakeSlideLeft.setMode(RUN_USING_ENCODER);
         outtakeSlideLeft.setZeroPowerBehavior(BRAKE);
         outtakeSlideLeft.setDirection(REVERSE);
-
-        outtakeSlideRight = hardwareMap.get(DcMotor.class, "outtakeSlideRight");
-        outtakeSlideRight.setMode(STOP_AND_RESET_ENCODER);
-        outtakeSlideRight.setMode(RUN_USING_ENCODER);
-        outtakeSlideRight.setZeroPowerBehavior(BRAKE);
-        outtakeSlideRight.setDirection(REVERSE);
     }
 }

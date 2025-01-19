@@ -49,8 +49,8 @@ public class TeleOpDrive extends LinearOpMode {
     DcMotor driveFrontRight;
     DcMotor driveBackLeft;
     DcMotor driveBackRight;
-    DcMotor outtakeSlideLeft;
     DcMotor outtakeSlideRight;
+    DcMotor outtakeSlideLeft;
 
     Servo pincher;
     Servo intakeSlide;
@@ -171,16 +171,16 @@ public class TeleOpDrive extends LinearOpMode {
         driveBackRight.setMode(RUN_USING_ENCODER);
         driveBackRight.setZeroPowerBehavior(BRAKE);
 
-        outtakeSlideLeft = hardwareMap.get(DcMotor.class, "outtakeSlideLeft");
-        outtakeSlideLeft.setMode(STOP_AND_RESET_ENCODER);
-        outtakeSlideLeft.setMode(RUN_USING_ENCODER);
-        outtakeSlideLeft.setZeroPowerBehavior(BRAKE);
-        outtakeSlideLeft.setDirection(REVERSE);
-
         outtakeSlideRight = hardwareMap.get(DcMotor.class, "outtakeSlideRight");
         outtakeSlideRight.setMode(STOP_AND_RESET_ENCODER);
         outtakeSlideRight.setMode(RUN_USING_ENCODER);
         outtakeSlideRight.setZeroPowerBehavior(BRAKE);
+        outtakeSlideRight.setDirection(REVERSE);
+
+        outtakeSlideLeft = hardwareMap.get(DcMotor.class, "outtakeSlideLeft");
+        outtakeSlideLeft.setMode(STOP_AND_RESET_ENCODER);
+        outtakeSlideLeft.setMode(RUN_USING_ENCODER);
+        outtakeSlideLeft.setZeroPowerBehavior(BRAKE);
 
 
         pincher = hardwareMap.get(Servo.class, "pincher");
@@ -203,8 +203,8 @@ public class TeleOpDrive extends LinearOpMode {
                 driveBackLeft,
                 driveBackRight,
                 driveFrontRight,
-                outtakeSlideLeft,
                 outtakeSlideRight,
+                outtakeSlideLeft,
                 intakeArm,
                 pincherRotator,
                 intakeRotator,
