@@ -43,7 +43,6 @@ public class samplePipeline extends LinearOpMode {
         HardwareMap hwmap = hardwareMap;
 
         initOpenCV();
-        //Gamepad gamepad1 = new Gamepad();
         waitForStart();
 
         while (opModeIsActive()) {
@@ -61,7 +60,7 @@ public class samplePipeline extends LinearOpMode {
 
 
     private void initOpenCV() {
-        yellowVisionPortal = new YellowVisionPortal(.25,.75,.5,1);
+        yellowVisionPortal = new YellowVisionPortal();
         visionPortal = new VisionPortal.Builder().
                 addProcessor(yellowVisionPortal)
                 .setCameraResolution(new android.util.Size(1920, 1080))
@@ -70,6 +69,7 @@ public class samplePipeline extends LinearOpMode {
                 .setAutoStartStreamOnBuild(true)
                 .enableLiveView(true)
                 .build();
+
 
 
     }
@@ -87,48 +87,35 @@ class YellowVisionPortal implements VisionProcessor{
     final double distanceOffGround = 8.9;
     Mat hsvFrame = new Mat();
     Mat mask = new Mat();
-    private double lowerX;
-    private double upperX;
-    private double lowerY;
-    private double upperY;
+    private final double lowerX = .75*width;
+    private final double upperX = .25*width;
+    private final double lowerY = .5*height;
+    private final double upperY = 1.0*height;
     public Point centroid = new Point();
     public double angleOfRotation = 0;
     public double timeTakenMili = 0;
     public List<Double> position = Arrays.asList(0.0, 0.0, 0.0);
-    private Mat cameraMatrix = new Mat();
-    private Mat distCoeffs = new Mat();
-    private Mat undistorted = new Mat();
-
-
-    public YellowVisionPortal(
-            double lowerX,
-            double upperX,
-            double lowerY,
-            double upperY
-    ){
-        this.lowerX = lowerX*width;
-        this.upperX = upperX*width;
-        this.lowerY = lowerY*height;
-        this.upperY = upperY*height;
-        cameraMatrix.put(0, 0, 595.37521152, 0.0, 952.22722088,
-                0.0 ,597.10091695, 488.29707956,
-                0.0,           0.0,           1.0
-        );
-        distCoeffs.put(0, 0, -0.00593377, -0.00816853,  0.00092361, -0.00103652, -0.00245282);
-
-    }
+    private final Mat cameraMatrix = new Mat();
+    private final Mat distCoeffs = new Mat();
+    private Mat editingFrame = new Mat();
 
 
     @Override
     public void init(int width, int height, CameraCalibration calibration) {
-
+        cameraMatrix.put(0, 0, 595.37521152, 0.0, 952.22722088,
+                                               0.0 ,597.10091695, 488.29707956,
+                                               0.0,           0.0,           1.0
+        );
+        distCoeffs.put(0, 0, -0.00593377, -0.00816853,  0.00092361, -0.00103652, -0.00245282);
     }
     @Override
     public Object processFrame(Mat frame, long captureTimeNanos) {
-        Calib3d.undistort(frame,frame,cameraMatrix,distCoeffs);
+
+        editingFrame = frame;
+        Calib3d.undistort(frame,editingFrame,cameraMatrix,distCoeffs);
         long startTime = System.nanoTime();
         List<List<Object>> samplesData = new ArrayList<>();
-        preprocess(frame);
+        preprocess(editingFrame);
         ArrayList<MatOfPoint> contours = new ArrayList<>();
         Imgproc.findContours(mask, contours, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 
@@ -215,7 +202,7 @@ class YellowVisionPortal implements VisionProcessor{
                     if(screencenter.x<lowerX || screencenter.x>upperX || screencenter.y<lowerY || screencenter.y>upperY){
                         continue;
                     }
-                    Imgproc.drawContours(frame, Collections.singletonList(c), -1, new Scalar(0,0,255));
+                    Imgproc.drawContours(editingFrame, Collections.singletonList(c), -1, new Scalar(0,0,255));
                     Point rWPos = onScreen2RealWorld(screencenter);
                     List<Object> sampleData= new ArrayList<>();
                     sampleData.add(rWPos);
@@ -249,10 +236,10 @@ class YellowVisionPortal implements VisionProcessor{
             centroid = (Point) closest.get(0);
             angleOfRotation = (double) closest.get(1);
         }
-        Imgproc.drawMarker(frame,centroid, new Scalar(255, 192, 203));
+        Imgproc.drawMarker(editingFrame,centroid, new Scalar(255, 192, 203));
         long endTime = System.nanoTime();
         timeTakenMili = (double) (endTime - startTime) /1000000;
-        return frame;
+        return editingFrame;
     }
     @Override
     public void onDrawFrame(Canvas canvas, int onscreenWidth, int onscreenHeight, float scaleBmpPxToCanvasPx, float scaleCanvasDensity, Object userContext) {
@@ -271,8 +258,6 @@ class YellowVisionPortal implements VisionProcessor{
         Core.inRange(hsvFrame,lowerYellow,upperYellow,mask);
 
         //Scalars used to detect the lower red of the samples
-
-
 
         Point anchorPoint = new Point(-1, -1);
         Imgproc.erode(mask,mask, Imgproc.getStructuringElement(
