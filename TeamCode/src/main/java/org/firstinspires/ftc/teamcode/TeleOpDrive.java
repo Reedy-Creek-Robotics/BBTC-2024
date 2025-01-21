@@ -12,12 +12,15 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
+import org.firstinspires.ftc.teamcode.modules.RunStates;
 import org.openftc.easyopencv.OpenCvCamera;
 
 @TeleOp(name = "Tele-Op Driving")
 public class TeleOpDrive extends LinearOpMode {
 
     ElapsedTime buttonDebounce;
+    ElapsedTime timer;
 
     static double PINCHER_OPEN = 0;
     static double PINCHER_CLOSED = 0;
@@ -67,6 +70,9 @@ public class TeleOpDrive extends LinearOpMode {
     boolean pincherOpen;
     boolean hangPrimed = false;
     boolean hangInitiated = false;
+    boolean outtakingBasket = false;
+    boolean outtakingChamber = false;
+
 
     /*
     ToDo Get intakePositions working for setting the positions of all devices
@@ -83,6 +89,7 @@ public class TeleOpDrive extends LinearOpMode {
         initHardware();
 
         buttonDebounce = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+        timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
 
         telemetry.addLine("> PRESS START");
         waitForStart();
@@ -114,11 +121,20 @@ public class TeleOpDrive extends LinearOpMode {
 
     private void processControl() {
 
-        // We check if the debouce is greater than the button delay to avoid one press being registered as many
+        // We check if the debounce is greater than the button delay to avoid one press being registered as many
         if(gamepad1.b && buttonDebounce.milliseconds() > buttonDelay) {
             autoIntakeSample(alliance == 0 ? "red" : "blue");
-            transferSample();
         }
+
+        if(gamepad1.a && buttonDebounce.milliseconds() > buttonDelay) {
+            bot.runIntake(RunStates.TRANSFER, 1);
+            bot.runIntake(RunStates.DEFAULT, 1);
+            bot.runIntake(RunStates.BASKET_PREPARE, 1);
+            outtakingBasket = true;
+        }
+
+        if(outtakingBasket){ outtakeBasket(); }
+        if(outtakingChamber){ outtakeChamber(); }
 
         if (pincherOpen) {
             pincher.setPosition(PINCHER_OPEN);
@@ -238,6 +254,34 @@ public class TeleOpDrive extends LinearOpMode {
      }
      void transferSample(){
          bot.runIntake(RunStates.TRANSFER, 1);
+     }
+
+     boolean slidesPastTolerance(){
+         if(
+                 outtakeSlideLeft.getTargetPosition() - outtakeSlideLeft.getCurrentPosition() < 250 ||
+                 outtakeSlideLeft.getTargetPosition() - outtakeSlideLeft.getCurrentPosition() > 250 ||
+                 outtakeSlideRight.getTargetPosition() - outtakeSlideRight.getCurrentPosition() < 250 ||
+                 outtakeSlideRight.getTargetPosition() - outtakeSlideRight.getCurrentPosition() > 250
+
+         ) { return true; } else { return false; }
+
+     }
+
+     void outtakeBasket(){
+        boolean dropping = false;
+        if(!slidesPastTolerance()){
+            bot.runIntake(RunStates.BASKET_DROP, 1);
+            dropping = true;
+            timer.reset();
+        }
+        if(dropping && timer.milliseconds() > 1500){
+            bot.runIntake(RunStates.DEFAULT, 1);
+            outtakingBasket = false;
+        }
+     }
+
+     void outtakeChamber(){
+
      }
 
 
