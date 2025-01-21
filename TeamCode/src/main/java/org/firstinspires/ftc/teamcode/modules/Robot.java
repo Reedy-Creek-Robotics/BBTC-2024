@@ -12,8 +12,8 @@ public class Robot {
     private DcMotor driveFrontRight;
     private DcMotor driveBackRight;
     private DcMotor driveBackLeft;
-    private DcMotor outtakeSlide1;
-    private DcMotor outtakeSlide2;
+    private DcMotor outtakeSlideRight;
+    private DcMotor outtakeSlideLeft;
 
     private Servo intakeArm;
     private Servo pincherRotator;
@@ -41,8 +41,8 @@ public class Robot {
             DcMotor driveBackLeft,
             DcMotor driveBackRight,
             DcMotor driveFrontRight,
-            DcMotor outtakeSlide1,
-            DcMotor outtakeSlide2,
+            DcMotor outtakeSlideRight,
+            DcMotor outtakeSlideLeft,
                Servo intakeArm,
                Servo pincherRotator,
                Servo intakeRotator,
@@ -59,8 +59,8 @@ public class Robot {
         this.driveBackLeft = driveBackLeft;
         this.driveBackRight = driveBackRight;
         this.driveFrontRight = driveFrontRight;
-        this.outtakeSlide1 = outtakeSlide1;
-        this.outtakeSlide2 = outtakeSlide2;
+        this.outtakeSlideRight = outtakeSlideRight;
+        this.outtakeSlideLeft = outtakeSlideLeft;
         this.intakeArm = intakeArm;
         this.pincherRotator = pincherRotator;
         this.intakeRotator = intakeRotator;
@@ -83,11 +83,11 @@ public class Robot {
             basket.setPosition(RunStates.getBasketPos());
             pincher.setPosition(RunStates.isPincherOpen() ? PINCHER_OPEN : PINCHER_CLOSED);
             claw.setPosition(RunStates.isClawOpen() ? CLAW_OPEN : CLAW_CLOSED);
-            outtakeSlide1.setTargetPosition(RunStates.getOuttakeSlidePos());
-            outtakeSlide2.setTargetPosition(-RunStates.getOuttakeSlidePos());
-            outtakeSlide1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            outtakeSlide2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            outtakeSlide1.setPower(speed);
-            outtakeSlide2.setPower(speed);
+            outtakeSlideRight.setTargetPosition(RunStates.getOuttakeSlidePos());
+            outtakeSlideLeft.setTargetPosition(-RunStates.getOuttakeSlidePos());
+            outtakeSlideRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            outtakeSlideLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            outtakeSlideRight.setPower(speed);
+            outtakeSlideLeft.setPower(speed);
     }
 }
