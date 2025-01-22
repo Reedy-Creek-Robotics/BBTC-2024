@@ -43,7 +43,7 @@ public class VisionPipeline implements VisionProcessor {
     private Mat editingFrame = new Mat();
 
     //0=red 1=blue 2=yellow
-    private int color;
+    private final int color;
 
     public boolean nothingThere;
 
