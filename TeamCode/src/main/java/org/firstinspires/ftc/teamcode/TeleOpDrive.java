@@ -1,10 +1,14 @@
 package org.firstinspires.ftc.teamcode;
 
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.teamcode.modules.Robot;
 
 import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.*;
 import static com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.BRAKE;
 import static com.qualcomm.robotcore.hardware.DcMotorSimple.Direction.*;
+
+import com.acmerobotics.roadrunner.Pose2d;
+import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -14,6 +18,9 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.modules.RunStates;
+import org.firstinspires.ftc.teamcode.modules.VisionPipeline;
+import org.firstinspires.ftc.vision.VisionPortal;
+import org.opencv.core.Point;
 import org.openftc.easyopencv.OpenCvCamera;
 
 @TeleOp(name = "Tele-Op Driving")
@@ -21,7 +28,9 @@ public class TeleOpDrive extends LinearOpMode {
 
     ElapsedTime buttonDebounce;
     ElapsedTime timer;
-
+    VisionPipeline yellowVisionPipeline;
+    VisionPipeline alliaceVisionPipeline;
+    VisionPortal visionPortal;
     static double PINCHER_OPEN = 0;
     static double PINCHER_CLOSED = 0;
     static double CLAW_OPEN = 0;
@@ -78,7 +87,7 @@ public class TeleOpDrive extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
 
         initHardware();
-
+        initOpenCv();
         buttonDebounce = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
         timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
 
@@ -165,6 +174,7 @@ public class TeleOpDrive extends LinearOpMode {
         }
     }
 
+    //TODO get position from roadrunner so we can give to VisionPipelines
     private void processVariableUpdates() {
         ly1 = -gamepad1.left_stick_y;
         // We apply a 1.1 multiplier to the x-axis to make apply for strafing inaccuracies
@@ -259,6 +269,20 @@ public class TeleOpDrive extends LinearOpMode {
         );
     }
 
+    private void initOpenCv(){
+        yellowVisionPipeline = new VisionPipeline(2);
+        alliaceVisionPipeline = new VisionPipeline(alliance);
+        visionPortal = new VisionPortal.Builder().
+                addProcessor(yellowVisionPipeline)
+                .addProcessor(alliaceVisionPipeline)
+                .setCameraResolution(new android.util.Size(1920, 1080))
+                .setCamera(hardwareMap.get(WebcamName.class, "Webcam1"))
+                .setStreamFormat(VisionPortal.StreamFormat.MJPEG)
+                .setAutoStartStreamOnBuild(true)
+                .enableLiveView(true)
+                .build();
+    }
+
 
     // Action Methods
 
@@ -283,13 +307,22 @@ public class TeleOpDrive extends LinearOpMode {
 
     void autoIntakeSample(String color){
          //ToDo Find the math required to get the offset from the robot to the sample, taking into account the extra distance at the end of the intake slide
-
+        Point sCentroid;
+        double sAngle;
          if(color == "yellow"){
              //ToDo Get the location of the nearest yellow sample
+             if(!yellowVisionPipeline.nothingThere){
+                 sCentroid = yellowVisionPipeline.centroid;
+                 sAngle = yellowVisionPipeline.angleOfRotation;
+             }
          } else if(color == "blue") {
              //ToDo Get the location of the nearest blue sample
+             sCentroid = alliaceVisionPipeline.centroid;
+             sAngle = alliaceVisionPipeline.angleOfRotation;
          } else {
              //ToDo Get the location of the nearest red sample
+             sCentroid = alliaceVisionPipeline.centroid;
+             sAngle = alliaceVisionPipeline.angleOfRotation;
          }
          double targetX = 0;
          double targetY = 0;
