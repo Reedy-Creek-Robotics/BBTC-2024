@@ -1,5 +1,4 @@
-
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.modules;
 
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -31,56 +30,7 @@ import java.util.List;
 
 
 @TeleOp(name="Sample Pipeline")
-public class samplePipeline extends LinearOpMode {
-    YellowVisionPortal yellowVisionPortal;
-    private VisionPortal visionPortal;
-
-    private void updatePosition() {
-        yellowVisionPortal.position = Arrays.asList(0.0, 0.0, 0.0);
-    }
-
-    @Override
-    public void runOpMode() {
-        HardwareMap hwmap = hardwareMap;
-
-        initOpenCV();
-        waitForStart();
-
-        while (opModeIsActive()) {
-            updatePosition();
-            telemetry.addData("Closest Sample [x,y, rotation]: ", Arrays.asList(yellowVisionPortal.centroid.x,yellowVisionPortal.centroid.y,yellowVisionPortal.angleOfRotation));
-            telemetry.addData("time taken for image process: ",yellowVisionPortal.timeTakenMili);
-            telemetry.update();
-
-
-        }
-
-        visionPortal.close();
-
-    }
-
-
-    private void initOpenCV() {
-        yellowVisionPortal = new YellowVisionPortal();
-        visionPortal = new VisionPortal.Builder().
-                addProcessor(yellowVisionPortal)
-                .setCameraResolution(new android.util.Size(1920, 1080))
-                .setCamera(hardwareMap.get(WebcamName.class, "Webcam1"))
-                .setStreamFormat(VisionPortal.StreamFormat.MJPEG)
-                .setAutoStartStreamOnBuild(true)
-                .enableLiveView(true)
-                .build();
-
-
-
-    }
-
-
-
-
-
-}
-class YellowVisionPortal implements VisionProcessor{
+class YellowVisionPipeline implements VisionProcessor{
     final double width = 1920;
     final double height = 1080;
     final double screenCenterX = width/2;
