@@ -19,7 +19,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class YellowVisionPortal implements VisionProcessor {
+
+public class VisionPipeline implements VisionProcessor {
     final double width = 1920;
     final double height = 1080;
     final double screenCenterX = width / 2;
@@ -27,6 +28,8 @@ public class YellowVisionPortal implements VisionProcessor {
     final double distanceOffGround = 8.9;
     Mat hsvFrame = new Mat();
     Mat mask = new Mat();
+    Mat redUpper = new Mat();
+    Mat redLower = new Mat();
     private final double lowerX = .25 * width;
     private final double upperX = .75 * width;
     private final double lowerY = .5 * height;
@@ -39,6 +42,30 @@ public class YellowVisionPortal implements VisionProcessor {
     private final Mat distCoeffs = new Mat();
     private Mat editingFrame = new Mat();
 
+    //0=red 1=blue 2=yellow
+    private int color;
+
+    public boolean nothingThere;
+
+
+    // Scalars used to detect the yellow samples
+    Scalar lowerYellow = new Scalar(5, 139, 109);
+
+    Scalar upperYellow = new Scalar(31, 255, 255);
+
+    //scalars used to detect the red samples
+    Scalar upperRedHigh = new Scalar(180,255,255);
+    Scalar upperRedLow = new Scalar(152,123,31);
+    Scalar lowerRedHigh = new Scalar (13,255,255);
+    Scalar lowerRedLow = new Scalar(0,116,65);
+    //scalars used to detect the blue samples
+    Scalar lowerBlue = new Scalar(90,75,168);
+    Scalar upperBlue = new Scalar(118,255,255);
+
+
+    public VisionPipeline(int color) {
+        this.color = color;
+    }
 
     @Override
     public void init(int width, int height, CameraCalibration calibration) {
@@ -170,7 +197,7 @@ public class YellowVisionPortal implements VisionProcessor {
             }
 
         }
-
+        nothingThere = samplesData.isEmpty();
         if (closest.size() == 2) {
             centroid = (Point) closest.get(0);
             angleOfRotation = (double) closest.get(1);
@@ -179,7 +206,6 @@ public class YellowVisionPortal implements VisionProcessor {
         timeTakenMili = (double) (endTime - startTime) / 1000000;
         return editingFrame;
     }
-
     @Override
     public void onDrawFrame(Canvas canvas, int onscreenWidth, int onscreenHeight, float scaleBmpPxToCanvasPx, float scaleCanvasDensity, Object userContext) {
         canvas.drawCircle(500, 500, 4, new Paint(3));
@@ -189,14 +215,24 @@ public class YellowVisionPortal implements VisionProcessor {
 
         Imgproc.cvtColor(frame, hsvFrame, Imgproc.COLOR_RGB2HSV);
 
-        // Scalars used to detect the yellow samples
-        Scalar lowerYellow = new Scalar(5, 139, 109);
-
-        Scalar upperYellow = new Scalar(31, 255, 255);
 
 
-        Core.inRange(hsvFrame, lowerYellow, upperYellow, mask);
+        if(color==0) {
+            //reds
+            //lower Red
+            Core.inRange(hsvFrame,lowerRedLow,lowerRedHigh,redLower);
+            //higher Red
+            Core.inRange(hsvFrame, upperRedLow,upperRedHigh,redUpper);
+            //combining both masks
+            Core.bitwise_or(redUpper,redLower,mask);
 
+        }else if(color==1){
+            //yellow
+            Core.inRange(hsvFrame,lowerBlue,upperBlue,mask);
+        } else if (color==2) {
+            //Yellow
+            Core.inRange(hsvFrame, lowerYellow, upperYellow, mask);
+        }
         //Scalars used to detect the lower red of the samples
 
         Point anchorPoint = new Point(-1, -1);
