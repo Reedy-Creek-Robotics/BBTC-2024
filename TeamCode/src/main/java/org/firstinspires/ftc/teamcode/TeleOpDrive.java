@@ -27,11 +27,9 @@ public class TeleOpDrive extends LinearOpMode {
     static double CLAW_OPEN = 0;
     static double CLAW_CLOSED = 0;
 
+    // Delay between button presses in ms
     static int buttonDelay = 250;
-    private int intakePosition = 0;
 
-    int targetSlidePosition = 0;
-    int targetArmPosition = 0;
     // 0 = red, 1 = blue
     int alliance = 0;
 
@@ -44,9 +42,7 @@ public class TeleOpDrive extends LinearOpMode {
     double rt1;
 
     Gamepad currentGamepad1 = new Gamepad();
-    Gamepad currentGamepad2 = new Gamepad();
     Gamepad previousGamepad1 = new Gamepad();
-    Gamepad previousGamepad2 = new Gamepad();
 
     DcMotor driveFrontLeft;
     DcMotor driveFrontRight;
@@ -72,7 +68,8 @@ public class TeleOpDrive extends LinearOpMode {
     boolean hangInitiated = false;
     boolean outtakingBasket = false;
     boolean outtakingChamber = false;
-
+    boolean intakingWall = false;
+    boolean grabbing = false;
 
     /*
     ToDo Get intakePositions working for setting the positions of all devices
@@ -121,9 +118,20 @@ public class TeleOpDrive extends LinearOpMode {
 
     private void processControl() {
 
+        if(gamepad1.right_stick_button && buttonDebounce.milliseconds() > buttonDelay){
+            bot.runIntake(RunStates.DEFAULT, 1);
+        }
+
         // We check if the debounce is greater than the button delay to avoid one press being registered as many
         if(gamepad1.b && buttonDebounce.milliseconds() > buttonDelay) {
             autoIntakeSample(alliance == 0 ? "red" : "blue");
+        }
+
+        if(gamepad1.dpad_down && buttonDebounce.milliseconds() > buttonDelay){
+            grabbing = false;
+            timer.reset();
+            bot.runIntake(RunStates.PREPARE_WALL, 1);
+            intakeWall();
         }
 
         if(gamepad1.a && buttonDebounce.milliseconds() > buttonDelay) {
@@ -150,18 +158,19 @@ public class TeleOpDrive extends LinearOpMode {
         rx1 = gamepad1.right_stick_x;
 
         previousGamepad1.copy(currentGamepad1);
-        previousGamepad2.copy(currentGamepad2);
         currentGamepad1.copy(gamepad1);
-        currentGamepad2.copy(gamepad2);
 
         if(gamepad1.back && buttonDebounce.milliseconds() > buttonDelay){
+            // Set alliance to red
             alliance = 0;
         } else if(gamepad1.start && buttonDebounce.milliseconds() > buttonDelay){
+            // Ser alliance to blue
             alliance = 1;
         }
     }
 
     private void processTelemetry(){
+        telemetry.addData("Alliance", alliance == 0 ? "Red" : "Blue");
     }
 
     private void initHardware() {
@@ -237,7 +246,20 @@ public class TeleOpDrive extends LinearOpMode {
 
     // Action Methods
 
-     void autoIntakeSample(String color){
+    boolean slidesPastTolerance(){
+        if(
+                outtakeSlideLeft.getTargetPosition() - outtakeSlideLeft.getCurrentPosition() < 250 ||
+                outtakeSlideLeft.getTargetPosition() - outtakeSlideLeft.getCurrentPosition() > 250 ||
+                outtakeSlideRight.getTargetPosition() - outtakeSlideRight.getCurrentPosition() < 250 ||
+                outtakeSlideRight.getTargetPosition() - outtakeSlideRight.getCurrentPosition() > 250
+
+        ) { return true; } else { return false; }
+
+    }
+
+    //void dropSample
+
+    void autoIntakeSample(String color){
          //ToDo Find the math required to get the offset from the robot to the sample, taking into account the extra distance at the end of the intake slide
 
          if(color == "yellow"){
@@ -251,23 +273,13 @@ public class TeleOpDrive extends LinearOpMode {
          double targetY = 0;
 
          bot.runIntake(RunStates.HOLD, 1);
-     }
-     void transferSample(){
-         bot.runIntake(RunStates.TRANSFER, 1);
-     }
+    }
 
-     boolean slidesPastTolerance(){
-         if(
-                 outtakeSlideLeft.getTargetPosition() - outtakeSlideLeft.getCurrentPosition() < 250 ||
-                 outtakeSlideLeft.getTargetPosition() - outtakeSlideLeft.getCurrentPosition() > 250 ||
-                 outtakeSlideRight.getTargetPosition() - outtakeSlideRight.getCurrentPosition() < 250 ||
-                 outtakeSlideRight.getTargetPosition() - outtakeSlideRight.getCurrentPosition() > 250
+    void intakeSpecimen(){
+        bot.runIntake(RunStates.PREPARE_WALL, 1);
+    }
 
-         ) { return true; } else { return false; }
-
-     }
-
-     void outtakeBasket(){
+    void outtakeBasket(){
         boolean dropping = false;
         if(!slidesPastTolerance()){
             bot.runIntake(RunStates.BASKET_DROP, 1);
@@ -278,11 +290,25 @@ public class TeleOpDrive extends LinearOpMode {
             bot.runIntake(RunStates.DEFAULT, 1);
             outtakingBasket = false;
         }
-     }
+    }
+
+    void intakeWall() {
+        if (timer.milliseconds() > 1000) {
+            bot.runIntake(RunStates.GRAB_WALL, 1);
+            grabbing = true;
+            timer.reset();
+        }
+        if (grabbing && timer.milliseconds() > 500) {
+            bot.runIntake(RunStates.DEFAULT, 1);
+            grabbing = false;
+        }
+    }
 
      void outtakeChamber(){
 
-     }
+    }
 
-
+    void transferSample(){
+        bot.runIntake(RunStates.TRANSFER, 1);
+    }
 }

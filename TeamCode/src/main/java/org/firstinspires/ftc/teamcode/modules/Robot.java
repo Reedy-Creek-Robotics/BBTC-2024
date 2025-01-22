@@ -24,8 +24,6 @@ public class Robot {
 
     private OpenCvCamera webcam1;
 
-    RunStates intakePositions[] = RunStates.values();
-
     Telemetry telemetry;
     LinearOpMode opMode;
 
