@@ -7,8 +7,6 @@ import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.*;
 import static com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.BRAKE;
 import static com.qualcomm.robotcore.hardware.DcMotorSimple.Direction.*;
 
-import com.acmerobotics.roadrunner.Pose2d;
-import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -20,6 +18,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.modules.RunStates;
 import org.firstinspires.ftc.teamcode.modules.VisionPipeline;
 import org.firstinspires.ftc.vision.VisionPortal;
+import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.openftc.easyopencv.OpenCvCamera;
 
@@ -83,9 +82,14 @@ public class TeleOpDrive extends LinearOpMode {
     boolean droppingSample = false;
     boolean grabbing = false;
 
+    //defining length of arms in servo linkage in inches
+    double arm1 = 2.814920799212598;
+    double arm2 = 10.078740275590551;
+    double distanceArm1AboveArm2 = 0.34252;
+
+
     @Override
     public void runOpMode() throws InterruptedException {
-
         initHardware();
         initOpenCv();
         buttonDebounce = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
@@ -106,7 +110,6 @@ public class TeleOpDrive extends LinearOpMode {
     }
 
     //ToDo Add a field centric driving method
-
     private void processDriving(){
         double denominator = Math.max(Math.abs(ly1) + Math.abs(lx1) + Math.abs(rx1), 1);
         double frontLeftPower = (ly1 + lx1 + rx1) / denominator;
@@ -366,5 +369,11 @@ public class TeleOpDrive extends LinearOpMode {
 
     void transferSample(){
         bot.runIntake(RunStates.TRANSFER, 1);
+    }
+
+    private double getLinkageAngle(double m){
+        return 180-(Math.acos((((Math.pow(m,2)-Math.pow(arm2,2)+ Math.pow(distanceArm1AboveArm2,2))/
+                                                arm1)  +arm1)/
+                                   2*Math.sqrt(Math.pow(distanceArm1AboveArm2, 2)+ Math.pow(m,2))));
     }
 }
