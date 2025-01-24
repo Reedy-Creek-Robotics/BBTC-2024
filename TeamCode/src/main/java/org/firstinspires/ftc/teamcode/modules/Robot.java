@@ -24,8 +24,6 @@ public class Robot {
 
     private OpenCvCamera webcam1;
 
-    RunStates intakePositions[] = RunStates.values();
-
     Telemetry telemetry;
     LinearOpMode opMode;
 
@@ -72,18 +70,20 @@ public class Robot {
         this.opMode = opMode;
     }
 
-    public void runIntake(RunStates RunStates, double speed){
-            intakeArm.setPosition(RunStates.getArmPos());
-            pincherRotator.setPosition(RunStates.getPincherRotatorPos());
-            intakeRotator.setPosition(RunStates.getIntakeRotatorPos());
-            if(RunStates.getSlidePos() >= 0){
-                intakeSlide.setPosition(RunStates.getSlidePos());
+    public void runIntake(RunStates RunState, double speed){
+            intakeArm.setPosition(RunState.getArmPos());
+            pincherRotator.setPosition(RunState.getPincherRotatorPos());
+            intakeRotator.setPosition(RunState.getIntakeRotatorPos());
+
+            if(RunState.getSlidePos() >= 0){
+                intakeSlide.setPosition(RunState.getSlidePos());
             }
-            basket.setPosition(RunStates.getBasketPos());
-            pincher.setPosition(RunStates.isPincherOpen() ? PINCHER_OPEN : PINCHER_CLOSED);
-            claw.setPosition(RunStates.isClawOpen() ? CLAW_OPEN : CLAW_CLOSED);
-            outtakeSlideRight.setTargetPosition(RunStates.getOuttakeSlidePos());
-            outtakeSlideLeft.setTargetPosition(-RunStates.getOuttakeSlidePos());
+
+            basket.setPosition(RunState.getBasketPos());
+            pincher.setPosition(RunState.isPincherOpen() ? PINCHER_OPEN : PINCHER_CLOSED);
+            claw.setPosition(RunState.isClawOpen() ? CLAW_OPEN : CLAW_CLOSED);
+            outtakeSlideRight.setTargetPosition(RunState.getOuttakeSlidePos());
+            outtakeSlideLeft.setTargetPosition(RunState.getOuttakeSlidePos());
             outtakeSlideRight.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             outtakeSlideLeft.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             outtakeSlideRight.setPower(speed);

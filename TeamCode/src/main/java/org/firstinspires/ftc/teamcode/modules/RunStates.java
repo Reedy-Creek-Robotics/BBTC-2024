@@ -85,6 +85,17 @@ public enum RunStates {
             0,
             false
     ),
+    // Prepare to grab a specimen from the wall
+    PREPARE_WALL(
+            0,
+            0,
+            0,
+            0,
+            0,
+            false,
+            0,
+            true
+    ),
     // Pick up a specimen from the wall
     GRAB_WALL(
             0,
