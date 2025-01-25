@@ -98,7 +98,6 @@ public class TeleOpDrive extends LinearOpMode {
 
     IMU imu;
 
-    boolean pincherOpen;
     boolean hangPrimed = false;
     boolean hangInitiated = false;
     boolean outtakingBasket = false;
@@ -106,6 +105,7 @@ public class TeleOpDrive extends LinearOpMode {
     boolean intakingWall = false;
     boolean droppingSample = false;
     boolean grabbing = false;
+    boolean dropping = false;
 
     //defining length of arms in servo linkage in inches
     double arm1 = 2.814920799212598;
@@ -138,11 +138,10 @@ public class TeleOpDrive extends LinearOpMode {
     }
 
     private void processDrivingRobot(){
-        double denominator = Math.max(Math.abs(ly1) + Math.abs(lx1) + Math.abs(rx1), 1);
-        double frontLeftPower = (ly1 + lx1 + rx1) / denominator;
-        double backLeftPower = (ly1 - lx1 + rx1) / denominator;
-        double frontRightPower = (ly1 - lx1 - rx1) / denominator;
-        double backRightPower = (ly1 + lx1 - rx1) / denominator;
+        double frontLeftPower = (ly1 + lx1 + rx1);
+        double backLeftPower = (ly1 - lx1 + rx1);
+        double frontRightPower = (ly1 - lx1 - rx1);
+        double backRightPower = (ly1 + lx1 - rx1);
 
         driveFrontLeft.setPower(frontLeftPower);
         driveBackLeft.setPower(backLeftPower);
@@ -215,6 +214,7 @@ public class TeleOpDrive extends LinearOpMode {
             bot.runIntake(RunStates.TRANSFER, 1);
             bot.runIntake(RunStates.DEFAULT, 1);
             bot.runIntake(RunStates.BASKET_PREPARE, 1);
+            dropping = false;
             outtakingBasket = true;
         }
 
@@ -229,12 +229,6 @@ public class TeleOpDrive extends LinearOpMode {
         //if(specimenState > 0){ outtakeChamber(); }
         if(intakingWall) { intakeWall(); }
         if(droppingSample) { dropSample(); }
-
-        if (pincherOpen) {
-            pincher.setPosition(PINCHER_OPEN);
-        } else {
-            pincher.setPosition(PINCHER_CLOSED);
-        }
     }
 
     //TODO get position from roadrunner so we can give to VisionPipelines
@@ -269,25 +263,22 @@ public class TeleOpDrive extends LinearOpMode {
 
     private void initHardware() {
         driveFrontLeft = hardwareMap.get(DcMotor.class, "driveFrontLeft");
-        driveFrontLeft.setMode(STOP_AND_RESET_ENCODER);
-        driveFrontLeft.setMode(RUN_USING_ENCODER);
+        driveFrontLeft.setMode(RUN_WITHOUT_ENCODER);
         driveFrontLeft.setZeroPowerBehavior(BRAKE);
         driveFrontLeft.setDirection(REVERSE);
 
         driveFrontRight = hardwareMap.get(DcMotor.class, "driveFrontRight");
-        driveFrontRight.setMode(STOP_AND_RESET_ENCODER);
-        driveFrontRight.setMode(RUN_USING_ENCODER);
+        driveFrontRight.setMode(RUN_WITHOUT_ENCODER);
         driveFrontRight.setZeroPowerBehavior(BRAKE);
 
         driveBackLeft = hardwareMap.get(DcMotor.class, "driveBackLeft");
-        driveBackLeft.setMode(STOP_AND_RESET_ENCODER);
-        driveBackLeft.setMode(RUN_USING_ENCODER);
+        driveBackLeft.setMode(RUN_WITHOUT_ENCODER);
         driveBackLeft.setZeroPowerBehavior(BRAKE);
         driveBackLeft.setDirection(REVERSE);
 
         driveBackRight = hardwareMap.get(DcMotor.class, "driveBackRight");
         driveBackRight.setMode(STOP_AND_RESET_ENCODER);
-        driveBackRight.setMode(RUN_USING_ENCODER);
+        driveBackRight.setMode(RUN_WITHOUT_ENCODER);
         driveBackRight.setZeroPowerBehavior(BRAKE);
 
         outtakeSlideRight = hardwareMap.get(DcMotor.class, "outtakeSlideRight");
@@ -302,8 +293,7 @@ public class TeleOpDrive extends LinearOpMode {
         outtakeSlideLeft.setZeroPowerBehavior(BRAKE);
 
 
-        pincher = hardwareMap.get(Servo.class, "pincher");
-        pincherOpen = false;
+        pincher = hardwareMap.get(Servo.class, "pincher");;
 
         intakeArm = hardwareMap.get(Servo.class, "intakeArm");
 
@@ -446,7 +436,6 @@ public class TeleOpDrive extends LinearOpMode {
         }
     }
     void outtakeBasket(){
-        boolean dropping = false;
         if(!slidesPastTolerance()){
             bot.runIntake(RunStates.BASKET_DROP, 1);
             dropping = true;
