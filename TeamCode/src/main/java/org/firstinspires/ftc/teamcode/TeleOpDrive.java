@@ -145,6 +145,7 @@ public class TeleOpDrive extends LinearOpMode {
         Pose2d initpos = new Pose2d(new Vector2d(-72, 0), Math.toRadians(90));
         localizer.setPose(initpos);
         drive = new MecanumDrive(hardwareMap, initpos);
+        localizer = drive.localizer;
     }
 
     private void processControl() {

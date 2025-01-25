@@ -62,6 +62,9 @@ public class VisionPipeline implements VisionProcessor {
     Scalar lowerBlue = new Scalar(90,75,168);
     Scalar upperBlue = new Scalar(118,255,255);
 
+    //
+    double distanceForward = 0;
+
 
     public VisionPipeline(int color) {
         this.color = color;
@@ -184,17 +187,10 @@ public class VisionPipeline implements VisionProcessor {
         List<Object> closest = new ArrayList<>();
         double shortestDistance = 0;
         for (int i = 0; i < samplesData.size(); i++) {
-            Point point = (Point) samplesData.get(i).get(0);
-            if (i == 0) {
-                closest = samplesData.get(i);
-
-                shortestDistance = Math.hypot(position.get(0) - point.x, position.get(1) - point.y);
-            } else {
-                if (shortestDistance > Math.hypot(position.get(0) - point.x, position.get(1) - point.y)) {
-                    closest = samplesData.get(i);
-                    shortestDistance = Math.hypot(position.get(0) - point.x, position.get(1) - point.y);
-                }
+                if((((Point) samplesData.get(i)).x)>-7.5&&((Point) samplesData.get(i)).x<-5.5){
+                    distanceForward = ((Point) samplesData.get(i)).y-5.03937;
             }
+
 
         }
         nothingThere = samplesData.isEmpty();
@@ -256,7 +252,7 @@ public class VisionPipeline implements VisionProcessor {
         double xRealWorld = Math.tan(xAngle) * yRealWorld;
         if (xIsNegative)
             xRealWorld = -xRealWorld;
-        return transformPosition(new Point(position.get(0), position.get(1)), position.get(2), new Point(xRealWorld, yRealWorld));
+        return  new Point(xRealWorld, yRealWorld);
 
 
     }
