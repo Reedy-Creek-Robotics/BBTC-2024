@@ -46,7 +46,6 @@ public class Robot {
                Servo intakeSlide,
                Servo basket,
                Servo pincher,
-               Servo claw,
                Telemetry telemetry,
                OpenCvCamera webcam1,
                LinearOpMode opMode
@@ -64,7 +63,6 @@ public class Robot {
         this.intakeSlide = intakeSlide;
         this.basket = basket;
         this.pincher = pincher;
-        this.claw = claw;
         this.telemetry = telemetry;
         this.webcam1 = webcam1;
         this.opMode = opMode;

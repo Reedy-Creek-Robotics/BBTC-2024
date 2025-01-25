@@ -1,12 +1,20 @@
 package org.firstinspires.ftc.teamcode;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.teamcode.RoadRunner.Localizer;
+import org.firstinspires.ftc.teamcode.RoadRunner.MecanumDrive;
 import org.firstinspires.ftc.teamcode.modules.Robot;
 
 import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.*;
 import static com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.BRAKE;
 import static com.qualcomm.robotcore.hardware.DcMotorSimple.Direction.*;
 
+import android.util.Size;
+
+import com.acmerobotics.roadrunner.Pose2d;
+import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
+import com.acmerobotics.roadrunner.Vector2d;
+import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -17,10 +25,15 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.modules.RunStates;
 import org.firstinspires.ftc.teamcode.modules.VisionPipeline;
+
 import org.firstinspires.ftc.vision.VisionPortal;
-import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.openftc.easyopencv.OpenCvCamera;
+
+import java.lang.reflect.Array;
+import java.util.Arrays;
+import java.util.Objects;
+
 
 @TeleOp(name = "Tele-Op Driving")
 public class TeleOpDrive extends LinearOpMode {
@@ -67,11 +80,16 @@ public class TeleOpDrive extends LinearOpMode {
     Servo pincherRotator;
     Servo intakeRotator;
     Servo basket;
-    Servo claw;
+    //Servo claw;
 
     OpenCvCamera webcam1;
 
     Robot bot;
+    MecanumDrive drive;
+
+    Localizer localizer ;
+
+
 
     boolean pincherOpen;
     boolean hangPrimed = false;
@@ -91,6 +109,7 @@ public class TeleOpDrive extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         initHardware();
+        initLocalizer();
         initOpenCv();
         buttonDebounce = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
         timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
@@ -101,7 +120,7 @@ public class TeleOpDrive extends LinearOpMode {
         while(opModeIsActive()) {
 
             processVariableUpdates();
-
+            pincher.setPosition(0);
             processDriving();
             processControl();
             processTelemetry();
@@ -121,6 +140,11 @@ public class TeleOpDrive extends LinearOpMode {
         driveBackLeft.setPower(backLeftPower);
         driveFrontRight.setPower(frontRightPower);
         driveBackRight.setPower(backRightPower);
+    }
+    private void initLocalizer(){
+        Pose2d initpos = new Pose2d(new Vector2d(-72, 0), Math.toRadians(90));
+        localizer.setPose(initpos);
+        drive = new MecanumDrive(hardwareMap, initpos);
     }
 
     private void processControl() {
@@ -158,15 +182,15 @@ public class TeleOpDrive extends LinearOpMode {
             outtakingBasket = true;
         }
 
-        if(gamepad1.dpad_up && buttonDebounce.milliseconds() > buttonDelay){
-            specimenState++;
-            if(specimenState > 2){
-                specimenState = 0;
-            }
-        }
+//        if(gamepad1.dpad_up && buttonDebounce.milliseconds() > buttonDelay){
+//            specimenState++;
+//            if(specimenState > 2){
+//                specimenState = 0;
+//            }
+//        }
 
         if(outtakingBasket){ outtakeBasket(); }
-        if(specimenState > 0){ outtakeChamber(); }
+        //if(specimenState > 0){ outtakeChamber(); }
         if(intakingWall) { intakeWall(); }
         if(droppingSample) { dropSample(); }
 
@@ -194,6 +218,11 @@ public class TeleOpDrive extends LinearOpMode {
                 alliance = 0;
             }
         }
+        //position updates
+        localizer.update();
+        Point camerapos = transformPosition(new Point(localizer.getPose().position.x,localizer.getPose().position.y), 180, new Point(-146.00000, -180.68629));
+        alliaceVisionPipeline.position = Arrays.asList(camerapos.x, camerapos.y,Math.toDegrees(localizer.getPose().heading.toDouble())+180);
+        yellowVisionPipeline.position = Arrays.asList(camerapos.x, camerapos.y,Math.toDegrees(localizer.getPose().heading.toDouble())+180);
     }
 
     private void processTelemetry(){
@@ -250,7 +279,7 @@ public class TeleOpDrive extends LinearOpMode {
 
         basket = hardwareMap.get(Servo.class, "basket");
 
-        claw = hardwareMap.get(Servo.class, "claw");
+        //claw = hardwareMap.get(Servo.class, "claw");
 
         this.bot = new Robot(
                 driveFrontLeft,
@@ -265,7 +294,6 @@ public class TeleOpDrive extends LinearOpMode {
                 intakeSlide,
                 basket,
                 pincher,
-                claw,
                 telemetry,
                 webcam1,
                 this
@@ -278,15 +306,13 @@ public class TeleOpDrive extends LinearOpMode {
         visionPortal = new VisionPortal.Builder().
                 addProcessor(yellowVisionPipeline)
                 .addProcessor(alliaceVisionPipeline)
-                .setCameraResolution(new android.util.Size(1920, 1080))
+                .setCameraResolution(new Size(1920, 1080))
                 .setCamera(hardwareMap.get(WebcamName.class, "Webcam1"))
                 .setStreamFormat(VisionPortal.StreamFormat.MJPEG)
                 .setAutoStartStreamOnBuild(true)
                 .enableLiveView(true)
                 .build();
     }
-
-
     // Action Methods
 
     boolean slidesPastTolerance(){
@@ -308,31 +334,76 @@ public class TeleOpDrive extends LinearOpMode {
             }
     }
 
-    void autoIntakeSample(String color){
-         //ToDo Find the math required to get the offset from the robot to the sample, taking into account the extra distance at the end of the intake slide
-        Point sCentroid;
-        double sAngle;
-         if(color == "yellow"){
-             //ToDo Get the location of the nearest yellow sample
-             if(!yellowVisionPipeline.nothingThere){
-                 sCentroid = yellowVisionPipeline.centroid;
-                 sAngle = yellowVisionPipeline.angleOfRotation;
-             }
-         } else if(color == "blue") {
-             //ToDo Get the location of the nearest blue sample
-             sCentroid = alliaceVisionPipeline.centroid;
-             sAngle = alliaceVisionPipeline.angleOfRotation;
-         } else {
-             //ToDo Get the location of the nearest red sample
-             sCentroid = alliaceVisionPipeline.centroid;
-             sAngle = alliaceVisionPipeline.angleOfRotation;
-         }
-         double targetX = 0;
-         double targetY = 0;
+    void autoIntakeSample(String color) {
+        if((Objects.equals(color, "yellow") &&!yellowVisionPipeline.nothingThere)||
+        (!Objects.equals(color, "yellow") &&!alliaceVisionPipeline.nothingThere)) {
+            TrajectoryActionBuilder tab1 = null;
+            boolean insideSub = false;
+            //ToDo Find the math required to get the offset from the robot to the sample, taking into account the extra distance at the end of the intake slide
+            Point sCentroid = new Point();
+            double sAngle = 0;
+            if (color == "yellow") {
+                //ToDo Get the location of the nearest yellow sample
+                if (!yellowVisionPipeline.nothingThere) {
+                    sCentroid = yellowVisionPipeline.centroid;
+                    sAngle = yellowVisionPipeline.angleOfRotation;
+                }
+            } else if (color == "blue") {
+                //ToDo Get the location of the nearest blue sample
+                if (!alliaceVisionPipeline.nothingThere) {
+                    sCentroid = alliaceVisionPipeline.centroid;
+                    sAngle = alliaceVisionPipeline.angleOfRotation;
+                }
+            } else {
+                //ToDo Get the location of the nearest red sample
+                if (!alliaceVisionPipeline.nothingThere) {
+                    sCentroid = alliaceVisionPipeline.centroid;
+                    sAngle = alliaceVisionPipeline.angleOfRotation;
+                }
+            }
+            if (sCentroid.x > -24 &&
+                    sCentroid.x < 24 &&
+                    sCentroid.y > -12 &&
+                    sCentroid.y < 12) {
+                insideSub = true;
+            }
+            if (insideSub) {
 
-         bot.runIntake(RunStates.HOLD, 1);
+                if (localizer.getPose().position.x < -24) {
+                    tab1 = drive.actionBuilder(localizer.getPose())
+                            .splineTo(new Vector2d(-32, sCentroid.y), Math.toRadians(0));
+                    intakeSlide.setPosition(getLinkageAngle((Math.abs(localizer.getPose().position.x) + Math.abs(sCentroid.x)) - 5.03937));
+
+                } else if (localizer.getPose().position.x > 24) {
+                    tab1 = drive.actionBuilder(localizer.getPose())
+                            .splineTo(new Vector2d(32, sCentroid.y), Math.toRadians(180));
+                    intakeSlide.setPosition(getLinkageAngle((Math.abs(localizer.getPose().position.x) + Math.abs(sCentroid.x)) - 5.03937));
+                } else if (localizer.getPose().position.y < -12) {
+                    tab1 = drive.actionBuilder(localizer.getPose())
+                            .splineTo(new Vector2d(sCentroid.x, -20), Math.toRadians(90));
+                    intakeSlide.setPosition(getLinkageAngle((Math.abs(localizer.getPose().position.y) + Math.abs(sCentroid.y)) - 5.03937));
+                } else {
+                    tab1 = drive.actionBuilder(localizer.getPose())
+                            .splineTo(new Vector2d(sCentroid.x, 20), Math.toRadians(270));
+                    intakeSlide.setPosition((getLinkageAngle(Math.abs(localizer.getPose().position.y) + Math.abs(sCentroid.y)) - 5.03937));
+                }
+
+            } else {//not in sub
+                if (localizer.getPose().position.x > sCentroid.x) {
+                    tab1 = drive.actionBuilder(localizer.getPose())
+                            .splineTo(new Vector2d(sCentroid.x + 13.03937, sCentroid.y), Math.toRadians(180));
+                    intakeSlide.setPosition(getLinkageAngle((Math.abs(localizer.getPose().position.y) + Math.abs(sCentroid.y)) - 5.03937));
+                } else {
+                    tab1 = drive.actionBuilder(localizer.getPose()).splineTo(new Vector2d(sCentroid.x - 13.03937, sCentroid.y), Math.toRadians(0));
+                    intakeSlide.setPosition(getLinkageAngle((Math.abs(localizer.getPose().position.y) + Math.abs(sCentroid.y)) - 5.03937));
+                }
+
+            }
+            pincherRotator.setPosition(sAngle / 180);
+            Actions.runBlocking(tab1.build());
+            bot.runIntake(RunStates.PICKING, 1);
+        }
     }
-
     void outtakeBasket(){
         boolean dropping = false;
         if(!slidesPastTolerance()){
@@ -372,8 +443,43 @@ public class TeleOpDrive extends LinearOpMode {
     }
 
     private double getLinkageAngle(double m){
-        return 180-(Math.acos((((Math.pow(m,2)-Math.pow(arm2,2)+ Math.pow(distanceArm1AboveArm2,2))/
+        return (90-(Math.acos((((Math.pow(m,2)-Math.pow(arm2,2)+ Math.pow(distanceArm1AboveArm2,2))/
                                                 arm1)  +arm1)/
-                                   2*Math.sqrt(Math.pow(distanceArm1AboveArm2, 2)+ Math.pow(m,2))));
+                                   2*Math.sqrt(Math.pow(distanceArm1AboveArm2, 2)+ Math.pow(m,2)))))/360;
     }
+
+    private Point transformPosition(Point robot, double degreesR, Point offset) {
+        /*
+         * Transform the object's position relative to the robot to the field's coordinate system.
+         *
+         * Parameters:
+         * xR, yR: Robot's position in the field's coordinate system
+         * degreesR: Robot's heading (in degrees) relative to the field
+         * xO, yO: Object's position relative to the robot (in robot's local coordinate system)
+         *
+         * Returns:
+         * (xField, yField): Object's position in the field's coordinate system
+         */
+
+        // Convert degrees to radians
+        double thetaR = Math.toRadians(degreesR);
+
+        // Create the rotation matrix based on robot's heading
+        double[][] rotationMatrix = new double[][]{
+                {Math.cos(thetaR), -Math.sin(thetaR)},
+                {Math.sin(thetaR), Math.cos(thetaR)}
+        };
+
+        // Rotate the object's local coordinates relative to the robot
+        double objectRotatedX = rotationMatrix[0][0] * offset.x + rotationMatrix[0][1] * offset.y;
+        double objectRotatedY = rotationMatrix[1][0] * offset.x + rotationMatrix[1][1] * offset.y;
+
+        // Translate by the robot's position in the field's coordinate system
+        double xField = robot.x + objectRotatedX;
+        double yField = robot.y + objectRotatedY;
+
+        // Return the result as an array
+        return new Point(xField, yField);
+    }
+
 }

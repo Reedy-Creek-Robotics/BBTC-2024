@@ -15,7 +15,7 @@ public enum RunStates {
     // Sit in front of the samples, prepared to pick up.
     PICKING(
             0,
-            0,
+            -1,
             0,
             -1,
             0,
