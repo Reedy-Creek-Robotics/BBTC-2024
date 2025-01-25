@@ -188,7 +188,7 @@ public class VisionPipeline implements VisionProcessor {
         double shortestDistance = 0;
         for (int i = 0; i < samplesData.size(); i++) {
                 if((((Point) samplesData.get(i).get(0)).x)>-7.5&&((Point) samplesData.get(i).get(0)).x<-5.5 && ((Point) samplesData.get(i).get(0)).y<20){
-                    distanceForward = ((Point) samplesData.get(i)).y-5.03937;
+                    distanceForward = ((Point) samplesData.get(i).get(0)).y-5.03937;
                     angleOfRotation = (double) samplesData.get(i).get(1);
 
                 }
