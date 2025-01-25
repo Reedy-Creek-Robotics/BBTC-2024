@@ -3,6 +3,10 @@ package org.firstinspires.ftc.teamcode;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.teamcode.modules.Robot;
 
+import static org.firstinspires.ftc.teamcode.modules.Robot.PINCHER_OPEN;
+import static org.firstinspires.ftc.teamcode.modules.Robot.PINCHER_CLOSED;
+import static org.firstinspires.ftc.teamcode.modules.Robot.CLAW_OPEN;
+import static org.firstinspires.ftc.teamcode.modules.Robot.CLAW_CLOSED;
 import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.*;
 import static com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.BRAKE;
 import static com.qualcomm.robotcore.hardware.DcMotorSimple.Direction.*;
@@ -30,10 +34,6 @@ public class TeleOpDrive extends LinearOpMode {
     VisionPipeline yellowVisionPipeline;
     VisionPipeline alliaceVisionPipeline;
     VisionPortal visionPortal;
-    static double PINCHER_OPEN = 0;
-    static double PINCHER_CLOSED = 0;
-    static double CLAW_OPEN = 0;
-    static double CLAW_CLOSED = 0;
 
     // Delay between button presses in ms
     static int buttonDelay = 250;
@@ -250,7 +250,7 @@ public class TeleOpDrive extends LinearOpMode {
 
         basket = hardwareMap.get(Servo.class, "basket");
 
-        claw = hardwareMap.get(Servo.class, "claw");
+        //claw = hardwareMap.get(Servo.class, "claw");
 
         this.bot = new Robot(
                 driveFrontLeft,
@@ -265,7 +265,7 @@ public class TeleOpDrive extends LinearOpMode {
                 intakeSlide,
                 basket,
                 pincher,
-                claw,
+                //claw,
                 telemetry,
                 webcam1,
                 this

@@ -3,33 +3,33 @@ package org.firstinspires.ftc.teamcode.modules;
 public enum RunStates {
     // Sets the Intake just in front of the bot, so slides can lift safely
     DEFAULT(
+    0.54,
+    0.63,
+    .008,
+               0.75,
+               0.5,
+               false,
                0,
-               0,
-               0,
-               0,
-               0,
-               true,
-               0,
-               true
+            false
     ),
     // Sit in front of the samples, prepared to pick up.
     PICKING(
-            0,
-            0,
-            0,
+            0.5,
             -1,
-            0,
+            0.1,
+            -1,
+            0.5,
             true,
             0,
             false
     ),
     // Grab the sample.
     GRAB(
-            0,
-            0,
-            0,
+            0.58,
             -1,
-            0,
+            0.1,
+            -1,
+            0.5,
             false,
             0,
             false
