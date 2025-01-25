@@ -1,21 +1,26 @@
 package org.firstinspires.ftc.teamcode.tests;
 
+import static com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.BRAKE;
+
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+@TeleOp
 public class intakeOuttakePositionTester extends LinearOpMode {
 
-    static int buttonDelay = 250;
+    static int buttonDelay = 60;
+    int outtakeSlidePosition = 0;
 
-    double intakeSlidePosition = 0.0;
-    double intakeArmPosition = 0.0;
-    double intakeRotatorPosition = 0.0;
-    double pincherRotatorPosition = 0.0;
-    double pincherPosition = 0.0;
-    double basketPosition = 0.0;
+    double intakeSlidePosition = 0.73;
+    double intakeArmPosition = 0.6;
+    double intakeRotatorPosition = 0.02;
+    double pincherRotatorPosition = 0.65;
+    double pincherPosition = 0.5;
+    double basketPosition = 0.2;
 
     Servo intakeSlide;
     Servo intakeArm;
@@ -41,55 +46,57 @@ public class intakeOuttakePositionTester extends LinearOpMode {
         outtakeSlideLeft = hardwareMap.get(DcMotor.class, "outtakeSlideLeft");
         outtakeSlideRight = hardwareMap.get(DcMotor.class, "outtakeSlideRight");
         outtakeSlideLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+        outtakeSlideLeft.setZeroPowerBehavior(BRAKE);
+        outtakeSlideRight.setZeroPowerBehavior(BRAKE);
 
         waitForStart();
         while (opModeIsActive()){
                if (gamepad1.a && debounceTimer.milliseconds() > buttonDelay){
-                    intakeSlidePosition += 0.01;
+                    intakeSlidePosition += 0.02;
                     debounceTimer.reset();
                }
                if (gamepad1.b && debounceTimer.milliseconds() > buttonDelay){
-                    intakeSlidePosition -= 0.01;
+                    intakeSlidePosition -= 0.02;
                     debounceTimer.reset();
                }
                if (gamepad1.x && debounceTimer.milliseconds() > buttonDelay){
-                    intakeArmPosition += 0.05;
+                    intakeArmPosition += 0.02;
                     debounceTimer.reset();
                }
                if (gamepad1.y && debounceTimer.milliseconds() > buttonDelay){
-                    intakeArmPosition -= 0.05;
+                    intakeArmPosition -= 0.02;
                     debounceTimer.reset();
                }
                if (gamepad1.dpad_up && debounceTimer.milliseconds() > buttonDelay){
-                    intakeRotatorPosition += 0.05;
+                    intakeRotatorPosition += 0.02;
                     debounceTimer.reset();
                }
                if (gamepad1.dpad_down && debounceTimer.milliseconds() > buttonDelay){
-                    intakeRotatorPosition -= 0.05;
+                    intakeRotatorPosition -= 0.02;
                     debounceTimer.reset();
                }
                if (gamepad1.dpad_left && debounceTimer.milliseconds() > buttonDelay){
-                    pincherRotatorPosition += 0.05;
+                    pincherRotatorPosition += 0.02;
                     debounceTimer.reset();
                }
                if (gamepad1.dpad_right && debounceTimer.milliseconds() > buttonDelay){
-                    pincherRotatorPosition -= 0.05;
+                    pincherRotatorPosition -= 0.02;
                     debounceTimer.reset();
                }
                if (gamepad1.left_bumper && debounceTimer.milliseconds() > buttonDelay){
-                    pincherPosition += 0.05;
+                    pincherPosition += 0.02;
                     debounceTimer.reset();
                }
                if (gamepad1.right_bumper && debounceTimer.milliseconds() > buttonDelay){
-                    pincherPosition -= 0.05;
+                    pincherPosition -= 0.02;
                     debounceTimer.reset();
                }
                if (gamepad1.left_stick_button && debounceTimer.milliseconds() > buttonDelay){
-                    basketPosition += 0.05;
+                    basketPosition += 0.02;
                     debounceTimer.reset();
                }
                if (gamepad1.right_stick_button && debounceTimer.milliseconds() > buttonDelay){
-                    basketPosition -= 0.05;
+                    basketPosition -= 0.02;
                     debounceTimer.reset();
                }
 
@@ -99,8 +106,9 @@ public class intakeOuttakePositionTester extends LinearOpMode {
                telemetry.addData("Pincher Rotator Position", pincherRotatorPosition);
                telemetry.addData("Pincher Position", pincherPosition);
                telemetry.addData("Basket Position", basketPosition);
-               telemetry.addData("Outtake Slide Position", outtakeSlideLeft.getCurrentPosition());
+               telemetry.addData("Outtake Slide Position", (outtakeSlideRight.getCurrentPosition() + outtakeSlideLeft.getCurrentPosition())/2);
                telemetry.update();
+
 
                outtakeSlideLeft.setPower(gamepad1.right_trigger - gamepad1.left_trigger);
                outtakeSlideRight.setPower(gamepad1.right_trigger - gamepad1.left_trigger);

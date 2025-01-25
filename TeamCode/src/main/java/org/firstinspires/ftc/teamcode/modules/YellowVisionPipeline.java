@@ -28,9 +28,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-
-@TeleOp(name="Sample Pipeline")
-public class YellowVisionPipeline implements VisionProcessor{
+class YellowVisionPipeline implements VisionProcessor{
     final double width = 1920;
     final double height = 1080;
     final double screenCenterX = width/2;
