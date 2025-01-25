@@ -120,6 +120,8 @@ public class TeleOpDrive extends LinearOpMode {
         telemetry.addLine("> PRESS START");
         waitForStart();
 
+        bot.runIntake(RunStates.DEFAULT, 1);
+
         while(opModeIsActive()) {
 
             processVariableUpdates();
@@ -131,7 +133,6 @@ public class TeleOpDrive extends LinearOpMode {
         }
     }
 
-    //ToDo Add a field centric driving method
     private void processDrivingRobot(){
         double denominator = Math.max(Math.abs(ly1) + Math.abs(lx1) + Math.abs(rx1), 1);
         double frontLeftPower = (ly1 + lx1 + rx1) / denominator;
@@ -170,9 +171,9 @@ public class TeleOpDrive extends LinearOpMode {
     }
 
     private void initLocalizer(){
-        Pose2d initpos = new Pose2d(new Vector2d(-72, 0), Math.toRadians(90));
+        /*Pose2d initpos = new Pose2d(new Vector2d(-72, 0), Math.toRadians(90));
         localizer.setPose(initpos);
-        drive = new MecanumDrive(hardwareMap, initpos);
+        drive = new MecanumDrive(hardwareMap, initpos);*/
     }
 
     private void processControl() {
@@ -250,10 +251,10 @@ public class TeleOpDrive extends LinearOpMode {
             }
         }
         //position updates
-        localizer.update();
-        Point camerapos = transformPosition(new Point(localizer.getPose().position.x,localizer.getPose().position.y), 180, new Point(-146.00000, -180.68629));
-        alliaceVisionPipeline.position = Arrays.asList(camerapos.x, camerapos.y,Math.toDegrees(localizer.getPose().heading.toDouble())+180);
-        yellowVisionPipeline.position = Arrays.asList(camerapos.x, camerapos.y,Math.toDegrees(localizer.getPose().heading.toDouble())+180);
+        //localizer.update();
+        //Point camerapos = transformPosition(new Point(localizer.getPose().position.x,localizer.getPose().position.y), 180, new Point(-146.00000, -180.68629));
+        //alliaceVisionPipeline.position = Arrays.asList(camerapos.x, camerapos.y,Math.toDegrees(localizer.getPose().heading.toDouble())+180);
+        //yellowVisionPipeline.position = Arrays.asList(camerapos.x, camerapos.y,Math.toDegrees(localizer.getPose().heading.toDouble())+180);
     }
 
     private void processTelemetry(){
