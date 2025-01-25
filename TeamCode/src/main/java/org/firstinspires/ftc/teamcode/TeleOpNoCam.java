@@ -7,6 +7,8 @@ import static org.firstinspires.ftc.teamcode.modules.Robot.BASKET_DOWN;
 import static org.firstinspires.ftc.teamcode.modules.Robot.BASKET_UP;
 import static org.firstinspires.ftc.teamcode.modules.Robot.INTAKE_SLIDE_IN;
 import static org.firstinspires.ftc.teamcode.modules.Robot.INTAKE_SLIDE_OUT;
+import static org.firstinspires.ftc.teamcode.modules.Robot.OUTTAKE_SLIDE_PREP_HANG;
+import static org.firstinspires.ftc.teamcode.modules.Robot.OUTTAKE_SLIDE_HANG;
 
 import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.*;
 import static com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.BRAKE;
@@ -29,9 +31,11 @@ public class TeleOpNoCam extends LinearOpMode {
     ElapsedTime buttonDebounce;
     ElapsedTime timer;
     ElapsedTime transferTimer;
+    ElapsedTime hangTimer;
 
     // Delay between button presses in ms
     static int buttonDelay = 250;
+    int hangPresses = 0;
 
     double ly1;
     double lx1;
@@ -68,6 +72,7 @@ public class TeleOpNoCam extends LinearOpMode {
     boolean outtakeSlideUp = false;
     boolean robotDrive = true;
     boolean transferring = false;
+    boolean hanging = false;
 
     @Override
     public void runOpMode()  {
@@ -75,6 +80,7 @@ public class TeleOpNoCam extends LinearOpMode {
         buttonDebounce = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
         timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
         transferTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+        hangTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
 
 
         telemetry.addLine("> PRESS START");
@@ -195,25 +201,53 @@ public class TeleOpNoCam extends LinearOpMode {
             transferTimer.reset();
         }
 
-        if(transferring && transferTimer.milliseconds() > 1000){
+        if(transferring && transferTimer.milliseconds() > 1250){
             clawOpen = true;
         }
 
-        if(transferring && transferTimer.milliseconds() > 1250) {
+        if(transferring && transferTimer.milliseconds() > 1500) {
             bot.runIntake(RunStates.DEFAULT, 1);
             transferring = false;
         }
 
-        pincherRotator.setPosition(pincherRotatorPos);
-        intakeSlide.setPosition(intakeSlideOut ? INTAKE_SLIDE_OUT : INTAKE_SLIDE_IN);
-        pincher.setPosition(clawOpen ? PINCHER_OPEN : PINCHER_CLOSED);
-        basket.setPosition(basketUp ? BASKET_UP : BASKET_DOWN);
-        outtakeSlideRight.setTargetPosition(outtakeSlideUp ? 3200 : 0);
-        outtakeSlideLeft.setTargetPosition(outtakeSlideUp ? 3200 : 0);
-        outtakeSlideRight.setMode(RUN_TO_POSITION);
-        outtakeSlideLeft.setMode(RUN_TO_POSITION);
-        outtakeSlideRight.setPower(1);
-        outtakeSlideLeft.setPower(1);
+        if(gamepad1.start&&buttonDebounce.milliseconds()>250){
+            hangPresses++;
+            buttonDebounce.reset();
+        }
+
+        if(hangPresses>=2){
+            hanging = true;
+        }
+
+
+        if(hanging){
+            pincherRotator.setPosition(RunStates.DEFAULT.pincherRotatorPos);
+            intakeSlide.setPosition(INTAKE_SLIDE_IN);
+            pincher.setPosition(PINCHER_CLOSED);
+            basket.setPosition(BASKET_DOWN);
+            if(hangPresses == 2) {
+                outtakeSlideRight.setTargetPosition(OUTTAKE_SLIDE_PREP_HANG);
+                outtakeSlideLeft.setTargetPosition(OUTTAKE_SLIDE_PREP_HANG);
+            }else if(hangPresses > 2){
+                outtakeSlideRight.setTargetPosition(OUTTAKE_SLIDE_HANG);
+                outtakeSlideLeft.setTargetPosition(OUTTAKE_SLIDE_HANG);
+            }
+            outtakeSlideRight.setMode(RUN_TO_POSITION);
+            outtakeSlideLeft.setMode(RUN_TO_POSITION);
+            outtakeSlideRight.setPower(1);
+            outtakeSlideLeft.setPower(1);
+        }else {
+            pincherRotator.setPosition(pincherRotatorPos);
+            intakeSlide.setPosition(intakeSlideOut ? INTAKE_SLIDE_OUT : INTAKE_SLIDE_IN);
+            pincher.setPosition(clawOpen ? PINCHER_OPEN : PINCHER_CLOSED);
+            basket.setPosition(basketUp ? BASKET_UP : BASKET_DOWN);
+            outtakeSlideRight.setTargetPosition(outtakeSlideUp ? 3200 : 0);
+            outtakeSlideLeft.setTargetPosition(outtakeSlideUp ? 3200 : 0);
+            outtakeSlideRight.setMode(RUN_TO_POSITION);
+            outtakeSlideLeft.setMode(RUN_TO_POSITION);
+            outtakeSlideRight.setPower(1);
+            outtakeSlideLeft.setPower(1);
+        }
 
     }
 
@@ -239,6 +273,7 @@ public class TeleOpNoCam extends LinearOpMode {
         telemetry.addData("Driving Mode", robotDrive ? "Robot" : "Field");
         telemetry.addData("Outtake Slide Pos", outtakeSlideLeft.getCurrentPosition());
         telemetry.addData("Pincher Rotator Position", pincherRotatorPos);
+        telemetry.addData("hangPresses", hangPresses);
         telemetry.update();
     }
     private void initHardware() {
