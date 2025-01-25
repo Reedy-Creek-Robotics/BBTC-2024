@@ -30,8 +30,8 @@ public class VisionPipeline implements VisionProcessor {
     Mat mask = new Mat();
     Mat redUpper = new Mat();
     Mat redLower = new Mat();
-    private final double lowerX = .25 * width;
-    private final double upperX = .75 * width;
+    private final double lowerX =  0* width;
+    private final double upperX = 1 * width;
     private final double lowerY = .5 * height;
     private final double upperY = 1.0 * height;
     public Point centroid = new Point();
@@ -187,13 +187,13 @@ public class VisionPipeline implements VisionProcessor {
         List<Object> closest = new ArrayList<>();
         double shortestDistance = 0;
         for (int i = 0; i < samplesData.size(); i++) {
-                if((((Point) samplesData.get(i).get(0)).x)>-7.5&&((Point) samplesData.get(i).get(0)).x<-5.5 && ((Point) samplesData.get(i).get(0)).y<20){
+                if((((Point) samplesData.get(i).get(0)).x)<7.5&&((Point) samplesData.get(i).get(0)).x<5.5 && ((Point) samplesData.get(i).get(0)).y<20){
                     distanceForward = ((Point) samplesData.get(i).get(0)).y-5.03937;
                     angleOfRotation = (double) samplesData.get(i).get(1);
 
                 }
         }
-        nothingThere = samplesData.isEmpty();
+        nothingThere = false;//samplesData.isEmpty();
         long endTime = System.nanoTime();
         timeTakenMili = (double) (endTime - startTime) / 1000000;
         return editingFrame;
