@@ -5,7 +5,7 @@ public enum RunStates {
     DEFAULT(
             0.54,
             0.63,
-            0.08,
+            0.02,
             0.75,
             0.38,
             false,
@@ -27,7 +27,7 @@ public enum RunStates {
     GRAB(
             0.58,
             -1,
-            0.1,
+            0,
             -1,
             0.38,
             false,
@@ -37,9 +37,9 @@ public enum RunStates {
     // Hold the sample above the transfer bucket
     HOLD(
             0,
-            0.63,
-            0.92,
-            0.91,
+            0.28,
+            1,
+    .73,
             0.38,
             false,
             0,
@@ -48,9 +48,9 @@ public enum RunStates {
     // Drop the sample into the transfer bucket.
     TRANSFER(
             0,
-            0.63,
-            0.92,
-            0.91,
+    .28,
+            1,
+    .73,
             0.38,
             true,
             0,
@@ -64,7 +64,7 @@ public enum RunStates {
             0.75,
             0.38,
             false,
-            3100,
+            3200,
             false
     ),
     // Tilt the bucket to slide the sample into the top basket

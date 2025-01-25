@@ -225,7 +225,7 @@ public class TeleOpDrive extends LinearOpMode {
             }
         }*/
 
-        if(outtakingBasket){ outtakeBasket(); }
+        if(outtakingBasket){    outtakeBasket(); }
         //if(specimenState > 0){ outtakeChamber(); }
         if(intakingWall) { intakeWall(); }
         if(droppingSample) { dropSample(); }
@@ -380,70 +380,69 @@ public class TeleOpDrive extends LinearOpMode {
     }
 
     void autoIntakeSample(String color) {
+        double distaceForward = 0;
+        double sAngle = 0;
         if((Objects.equals(color, "yellow") &&!yellowVisionPipeline.nothingThere)||
-        (!Objects.equals(color, "yellow") &&!alliaceVisionPipeline.nothingThere)) {
-            TrajectoryActionBuilder tab1 = null;
+         (!Objects.equals(color, "yellow") &&!alliaceVisionPipeline.nothingThere)) {
+
             boolean insideSub = false;
 
-            Point sCentroid = new Point();
-            double sAngle = 0;
+
             if (color == "yellow") {
                 if (!yellowVisionPipeline.nothingThere) {
-                    sCentroid = yellowVisionPipeline.centroid;
+                    distaceForward = yellowVisionPipeline.distanceForward;
                     sAngle = yellowVisionPipeline.angleOfRotation;
-                }
-            } else if (color == "blue") {
-                if (!alliaceVisionPipeline.nothingThere) {
-                    sCentroid = alliaceVisionPipeline.centroid;
-                    sAngle = alliaceVisionPipeline.angleOfRotation;
                 }
             } else {
                 if (!alliaceVisionPipeline.nothingThere) {
-                    sCentroid = alliaceVisionPipeline.centroid;
+                    distaceForward =alliaceVisionPipeline.distanceForward;
                     sAngle = alliaceVisionPipeline.angleOfRotation;
                 }
             }
-            if (sCentroid.x > -24 &&
-                    sCentroid.x < 24 &&
-                    sCentroid.y > -12 &&
-                    sCentroid.y < 12) {
-                insideSub = true;
-            }
-            if (insideSub) {
 
-                if (localizer.getPose().position.x < -24) {
-                    tab1 = drive.actionBuilder(localizer.getPose())
-                            .splineTo(new Vector2d(-32, sCentroid.y), Math.toRadians(0));
-                    intakeSlide.setPosition(getLinkageAngle((Math.abs(localizer.getPose().position.x) + Math.abs(sCentroid.x)) - 5.03937));
-
-                } else if (localizer.getPose().position.x > 24) {
-                    tab1 = drive.actionBuilder(localizer.getPose())
-                            .splineTo(new Vector2d(32, sCentroid.y), Math.toRadians(180));
-                    intakeSlide.setPosition(getLinkageAngle((Math.abs(localizer.getPose().position.x) + Math.abs(sCentroid.x)) - 5.03937));
-                } else if (localizer.getPose().position.y < -12) {
-                    tab1 = drive.actionBuilder(localizer.getPose())
-                            .splineTo(new Vector2d(sCentroid.x, -20), Math.toRadians(90));
-                    intakeSlide.setPosition(getLinkageAngle((Math.abs(localizer.getPose().position.y) + Math.abs(sCentroid.y)) - 5.03937));
-                } else {
-                    tab1 = drive.actionBuilder(localizer.getPose())
-                            .splineTo(new Vector2d(sCentroid.x, 20), Math.toRadians(270));
-                    intakeSlide.setPosition((getLinkageAngle(Math.abs(localizer.getPose().position.y) + Math.abs(sCentroid.y)) - 5.03937));
-                }
-
-            } else {//not in sub
-                if (localizer.getPose().position.x > sCentroid.x) {
-                    tab1 = drive.actionBuilder(localizer.getPose())
-                            .splineTo(new Vector2d(sCentroid.x + 13.03937, sCentroid.y), Math.toRadians(180));
-                    intakeSlide.setPosition(getLinkageAngle((Math.abs(localizer.getPose().position.y) + Math.abs(sCentroid.y)) - 5.03937));
-                } else {
-                    tab1 = drive.actionBuilder(localizer.getPose()).splineTo(new Vector2d(sCentroid.x - 13.03937, sCentroid.y), Math.toRadians(0));
-                    intakeSlide.setPosition(getLinkageAngle((Math.abs(localizer.getPose().position.y) + Math.abs(sCentroid.y)) - 5.03937));
-                }
-
-            }
-            pincherRotator.setPosition(sAngle / 180);
-            Actions.runBlocking(tab1.build());
+//            if (sCentroid.x > -24 &&
+//                    sCentroid.x < 24 &&
+//                    sCentroid.y > -12 &&
+//                    sCentroid.y < 12) {
+//                insideSub = true;
+//            }
+//            if (insideSub) {
+//
+//                if (localizer.getPose().position.x < -24) {
+//                    tab1 = drive.actionBuilder(localizer.getPose())
+//                            .splineTo(new Vector2d(-32, sCentroid.y), Math.toRadians(0));
+//                    intakeSlide.setPosition(getLinkageAngle((Math.abs(localizer.getPose().position.x) + Math.abs(sCentroid.x)) - 5.03937));
+//
+//                } else if (localizer.getPose().position.x > 24) {
+//                    tab1 = drive.actionBuilder(localizer.getPose())
+//                            .splineTo(new Vector2d(32, sCentroid.y), Math.toRadians(180));
+//                    intakeSlide.setPosition(getLinkageAngle((Math.abs(localizer.getPose().position.x) + Math.abs(sCentroid.x)) - 5.03937));
+//                } else if (localizer.getPose().position.y < -12) {
+//                    tab1 = drive.actionBuilder(localizer.getPose())
+//                            .splineTo(new Vector2d(sCentroid.x, -20), Math.toRadians(90));
+//                    intakeSlide.setPosition(getLinkageAngle((Math.abs(localizer.getPose().position.y) + Math.abs(sCentroid.y)) - 5.03937));
+//                } else {
+//                    tab1 = drive.actionBuilder(localizer.getPose())
+//                            .splineTo(new Vector2d(sCentroid.x, 20), Math.toRadians(270));
+//                    intakeSlide.setPosition((getLinkageAngle(Math.abs(localizer.getPose().position.y) + Math.abs(sCentroid.y)) - 5.03937));
+//                }
+//
+//            } else {//not in sub
+//                if (localizer.getPose().position.x > sCentroid.x) {
+//                    tab1 = drive.actionBuilder(localizer.getPose())
+//                            .splineTo(new Vector2d(sCentroid.x + 13.03937, sCentroid.y), Math.toRadians(180));
+//                    intakeSlide.setPosition(getLinkageAngle((Math.abs(localizer.getPose().position.y) + Math.abs(sCentroid.y)) - 5.03937));
+//                } else {
+//                    tab1 = drive.actionBuilder(localizer.getPose()).splineTo(new Vector2d(sCentroid.x - 13.03937, sCentroid.y), Math.toRadians(0));
+//                    intakeSlide.setPosition(getLinkageAngle((Math.abs(localizer.getPose().position.y) + Math.abs(sCentroid.y)) - 5.03937));
+//                }
+//
+//            }
+            intakeSlide.setPosition(getLinkageAngle(distaceForward));
+            pincherRotator.setPosition(sAngle / 300);
+            //Actions.runBlocking(tab1.build());
             bot.runIntake(RunStates.PICKING, 1);
+
         }
     }
     void outtakeBasket(){

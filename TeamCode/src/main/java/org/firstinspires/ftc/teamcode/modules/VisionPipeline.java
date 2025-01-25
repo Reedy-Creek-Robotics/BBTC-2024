@@ -63,7 +63,7 @@ public class VisionPipeline implements VisionProcessor {
     Scalar upperBlue = new Scalar(118,255,255);
 
     //
-    double distanceForward = 0;
+    public double distanceForward = 0;
 
 
     public VisionPipeline(int color) {
@@ -187,17 +187,13 @@ public class VisionPipeline implements VisionProcessor {
         List<Object> closest = new ArrayList<>();
         double shortestDistance = 0;
         for (int i = 0; i < samplesData.size(); i++) {
-                if((((Point) samplesData.get(i)).x)>-7.5&&((Point) samplesData.get(i)).x<-5.5){
+                if((((Point) samplesData.get(i).get(0)).x)>-7.5&&((Point) samplesData.get(i).get(0)).x<-5.5 && ((Point) samplesData.get(i).get(0)).y<20){
                     distanceForward = ((Point) samplesData.get(i)).y-5.03937;
-            }
+                    angleOfRotation = (double) samplesData.get(i).get(1);
 
-
+                }
         }
         nothingThere = samplesData.isEmpty();
-        if (closest.size() == 2) {
-            centroid = (Point) closest.get(0);
-            angleOfRotation = (double) closest.get(1);
-        }
         long endTime = System.nanoTime();
         timeTakenMili = (double) (endTime - startTime) / 1000000;
         return editingFrame;
