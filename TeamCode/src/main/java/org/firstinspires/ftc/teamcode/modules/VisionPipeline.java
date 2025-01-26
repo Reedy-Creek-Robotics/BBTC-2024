@@ -5,6 +5,7 @@ import android.graphics.Paint;
 
 import org.firstinspires.ftc.robotcore.internal.camera.calibration.CameraCalibration;
 import org.firstinspires.ftc.vision.VisionProcessor;
+import org.opencv.calib3d.Calib3d;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
@@ -13,6 +14,7 @@ import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
+
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -81,7 +83,6 @@ public class VisionPipeline implements VisionProcessor {
 
     @Override
     public Object processFrame(Mat frame, long captureTimeNanos) {
-
         editingFrame = frame;
         //Calib3d.undistort(frame,editingFrame,cameraMatrix,distCoeffs);
         long startTime = System.nanoTime();
@@ -103,10 +104,7 @@ public class VisionPipeline implements VisionProcessor {
                     points.add(approx.toList().get(j));
                 }
 
-
                 if (points.size() == 6) {
-
-
                     List<Point> longestLine = new ArrayList<>();
                     double longestDistance = 0.0;
                     for (int i = 1; i < points.size(); i++) {
