@@ -31,7 +31,12 @@ public class Robot {
             PINCHER_CLOSED = .2,
             PINCHER_OPEN = 0.4,
             CLAW_CLOSED = 0,
-            CLAW_OPEN = 0;
+            CLAW_OPEN = 0,
+            BASKET_UP = 0.68,
+            BASKET_DOWN = 0.38,
+            INTAKE_SLIDE_OUT = 0.47,
+            INTAKE_SLIDE_IN = 0.73,
+            OUTTAKE_SLIDE_UP = 3200;
 
     public Robot(
             DcMotor driveFrontLeft,
@@ -48,7 +53,7 @@ public class Robot {
                Servo pincher,
                //Servo claw,
                Telemetry telemetry,
-               OpenCvCamera webcam1,
+               //OpenCvCamera webcam1,
                LinearOpMode opMode
 
     ){
@@ -66,23 +71,14 @@ public class Robot {
         this.pincher = pincher;
         //this.claw = claw;
         this.telemetry = telemetry;
-        this.webcam1 = webcam1;
+        //this.webcam1 = webcam1;
         this.opMode = opMode;
     }
 
     public void runIntake(RunStates RunState, double speed){
             intakeArm.setPosition(RunState.getArmPos());
-            pincherRotator.setPosition(RunState.getPincherRotatorPos());
-
-            if(RunState.getIntakeRotatorPos() >= 0){
-                intakeRotator.setPosition(RunState.getIntakeRotatorPos());
-            }
             intakeRotator.setPosition(RunState.getIntakeRotatorPos());
-
-            if(RunState.getSlidePos() >= 0){
-                intakeSlide.setPosition(RunState.getSlidePos());
-            }
-
+            intakeRotator.setPosition(RunState.getIntakeRotatorPos());
             basket.setPosition(RunState.getBasketPos());
             pincher.setPosition(RunState.isPincherOpen() ? PINCHER_OPEN : PINCHER_CLOSED);
             //claw.setPosition(RunState.isClawOpen() ? CLAW_OPEN : CLAW_CLOSED);
