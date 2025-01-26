@@ -313,7 +313,6 @@ public class TeleOpDrive extends LinearOpMode {
                 pincher,
                 //claw,
                 telemetry,
-                webcam1,
                 this
         );
 
@@ -325,6 +324,7 @@ public class TeleOpDrive extends LinearOpMode {
 
         imu.initialize(parameters);
     }
+
     private void initOpenCv(){
         yellowVisionPipeline = new VisionPipeline(2);
         alliaceVisionPipeline = new VisionPipeline(alliance);
