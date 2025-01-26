@@ -33,7 +33,7 @@ public class Robot {
             CLAW_CLOSED = 0,
             CLAW_OPEN = 0,
             BASKET_UP = 0.68,
-            BASKET_DOWN = 0.38,
+            BASKET_DOWN = 0.42,
             INTAKE_SLIDE_OUT = 0.47,
             INTAKE_SLIDE_IN = 0.73,
             OUTTAKE_SLIDE_UP = 3200;

@@ -60,7 +60,7 @@ public class TeleOpNoCam extends LinearOpMode {
     boolean clawOpen = false;
     boolean intakeSlideOut = false;
     boolean outtakeSlideUp = false;
-    boolean robotDrive = false;
+    boolean robotDrive = true;
 
     @Override
     public void runOpMode()  {
@@ -139,18 +139,8 @@ public class TeleOpNoCam extends LinearOpMode {
             buttonDebounce.reset();
         }
 
-        if(gamepad1.x && buttonDebounce.milliseconds() > buttonDelay){
-            bot.runIntake(RunStates.PICKING, 1);
-            buttonDebounce.reset();
-        }
-
         if(gamepad1.a && buttonDebounce.milliseconds() > buttonDelay){
             bot.runIntake(RunStates.GRAB, 1);
-            buttonDebounce.reset();
-        }
-
-        if(gamepad1.b && buttonDebounce.milliseconds() > buttonDelay){
-            bot.runIntake(RunStates.HOLD, 1);
             buttonDebounce.reset();
         }
 
@@ -167,22 +157,33 @@ public class TeleOpNoCam extends LinearOpMode {
         if(gamepad1.left_stick_button && buttonDebounce.milliseconds() > buttonDelay){
             outtakeSlideUp = !outtakeSlideUp;
             buttonDebounce.reset();
+            if(outtakeSlideUp == false){
+                basketUp = false;
+            }
         }
 
 
 
         if(gamepad1.dpad_left && buttonDebounce.milliseconds() > 100){
-            pincherRotatorPos -= 0.05;
+            pincherRotatorPos = 0.35;
             buttonDebounce.reset();
         }
 
         if(gamepad1.dpad_right && buttonDebounce.milliseconds() > 100){
-            pincherRotatorPos += 0.05;
+            pincherRotatorPos = 0.65;
             buttonDebounce.reset();
         }
 
-        if(pincherRotatorPos > 1) { pincherRotatorPos = 1; }
-        if(pincherRotatorPos < 0) { pincherRotatorPos = 0; }
+        if(gamepad1.x && buttonDebounce.milliseconds() > buttonDelay){
+            bot.runIntake(RunStates.PICKING, 1);
+            buttonDebounce.reset();
+        }
+
+        if(gamepad1.b && buttonDebounce.milliseconds() > buttonDelay){
+            bot.runIntake(RunStates.HOLD, 1);
+            pincherRotatorPos = 0.65;
+            buttonDebounce.reset();
+        }
 
         pincherRotator.setPosition(pincherRotatorPos);
         intakeSlide.setPosition(intakeSlideOut ? INTAKE_SLIDE_OUT : INTAKE_SLIDE_IN);
@@ -203,9 +204,9 @@ public class TeleOpNoCam extends LinearOpMode {
         lx1 = gamepad1.left_stick_x * 1.1;
         rx1 = gamepad1.right_stick_x;
 
-        if(gamepad1.start && buttonDebounce.milliseconds() > buttonDelay){
+        /*if(gamepad1.start && buttonDebounce.milliseconds() > buttonDelay){
                robotDrive = !robotDrive;
-        }
+        }*/
 
         previousGamepad1.copy(currentGamepad1);
         currentGamepad1.copy(gamepad1);
@@ -218,11 +219,12 @@ public class TeleOpNoCam extends LinearOpMode {
         telemetry.addData("Pincher Open", clawOpen);
         telemetry.addData("Driving Mode", robotDrive ? "Robot" : "Field");
         telemetry.addData("Outtake Slide Pos", outtakeSlideLeft.getCurrentPosition());
+        telemetry.addData("Pincher Rotator Position", pincherRotatorPos);
         telemetry.update();
     }
     private void initHardware() {
         driveFrontLeft = hardwareMap.get(DcMotor.class, "driveFrontLeft");
-        driveFrontLeft.setMode(STOP_AND_RESET_ENCODER);
+        driveFrontLeft.setMode(RUN_WITHOUT_ENCODER);
         driveFrontLeft.setZeroPowerBehavior(BRAKE);
         driveFrontLeft.setDirection(REVERSE);
 
