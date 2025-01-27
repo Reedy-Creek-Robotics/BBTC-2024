@@ -47,15 +47,16 @@ public class TeleOpNoCam extends LinearOpMode {
     DcMotor driveFrontRight;
     DcMotor driveBackLeft;
     DcMotor driveBackRight;
-    DcMotor outtakeSlideRight;
-    DcMotor outtakeSlideLeft;
+    DcMotor outtakeSlideRight; //
+    DcMotor outtakeSlideLeft; //
 
-    Servo pincher;
-    Servo intakeSlide;
-    Servo intakeArm;
-    Servo pincherRotator;
-    Servo intakeRotator;
-    Servo basket;
+    Servo pincher; //
+    Servo intakeSlide; //
+    Servo intakeArm; //
+    Servo pincherRotator; //
+    Servo intakeRotator; //
+    Servo claw; //
+    Servo basket; //
 
     Robot bot;
 
@@ -132,11 +133,6 @@ public class TeleOpNoCam extends LinearOpMode {
             imu.resetYaw();
         }
 
-        if(gamepad1.right_stick_button && buttonDebounce.milliseconds() > buttonDelay){
-            bot.runIntake(RunStates.DEFAULT, 1);
-            buttonDebounce.reset();
-        }
-
         if(gamepad1.left_bumper && buttonDebounce.milliseconds() > buttonDelay){
             clawOpen = !clawOpen;
             buttonDebounce.reset();
@@ -164,11 +160,11 @@ public class TeleOpNoCam extends LinearOpMode {
 
         if(gamepad1.left_stick_button && buttonDebounce.milliseconds() > buttonDelay){
             outtakeSlideUp = !outtakeSlideUp;
-            buttonDebounce.reset();
             if(outtakeSlideUp == false){
                 basketUp = false;
             }
             transferTimer.reset();
+            buttonDebounce.reset();
         }
 
 
@@ -184,7 +180,7 @@ public class TeleOpNoCam extends LinearOpMode {
         }
 
         if(gamepad1.x && buttonDebounce.milliseconds() > buttonDelay){
-            bot.runIntake(RunStates.PICKING, 1);
+            bot.runIntake(RunStates.DEFAULT, 1);
             buttonDebounce.reset();
         }
 
@@ -200,6 +196,10 @@ public class TeleOpNoCam extends LinearOpMode {
 
         if(transferring && transferTimer.milliseconds() > 500){
             clawOpen = true;
+        }
+
+        if(transferring && transferTimer.milliseconds() > 750) {
+            bot.runIntake(RunStates.DEFAULT, 1);
             transferring = false;
         }
 
