@@ -39,7 +39,7 @@ public enum RunStates {
             0,
             0.28,
             1,
-    .73,
+            .73,
             0.38,
             false,
             0,
@@ -48,9 +48,9 @@ public enum RunStates {
     // Drop the sample into the transfer bucket.
     TRANSFER(
             0,
-    .28,
+            .28,
             1,
-    .73,
+            .73,
             0.38,
             true,
             0,

@@ -2,24 +2,16 @@ package org.firstinspires.ftc.teamcode;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.teamcode.RoadRunner.Localizer;
-import org.firstinspires.ftc.teamcode.RoadRunner.MecanumDrive;
+
 import org.firstinspires.ftc.teamcode.modules.Robot;
 
-import static org.firstinspires.ftc.teamcode.modules.Robot.PINCHER_OPEN;
-import static org.firstinspires.ftc.teamcode.modules.Robot.PINCHER_CLOSED;
-import static org.firstinspires.ftc.teamcode.modules.Robot.CLAW_OPEN;
-import static org.firstinspires.ftc.teamcode.modules.Robot.CLAW_CLOSED;
 import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.*;
 import static com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.BRAKE;
 import static com.qualcomm.robotcore.hardware.DcMotorSimple.Direction.*;
 
 import android.util.Size;
 
-import com.acmerobotics.roadrunner.Pose2d;
-import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
-import com.acmerobotics.roadrunner.Vector2d;
-import com.acmerobotics.roadrunner.ftc.Actions;
+
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -37,15 +29,12 @@ import org.firstinspires.ftc.vision.VisionPortal;
 import org.opencv.core.Point;
 import org.openftc.easyopencv.OpenCvCamera;
 
-import java.lang.reflect.Array;
-import java.util.Arrays;
-import java.util.Objects;
+
 import java.util.OptionalDouble;
 
 
 @TeleOp(name = "Tele-Op Driving")
 public class TeleOpDrive extends LinearOpMode {
-
     ElapsedTime buttonDebounce;
     ElapsedTime timer;
     VisionPipeline yellowVisionPipeline;
@@ -95,9 +84,6 @@ public class TeleOpDrive extends LinearOpMode {
     OpenCvCamera webcam1;
 
     Robot bot;
-    MecanumDrive drive;
-
-    Localizer localizer ;
 
     IMU imu;
 
@@ -110,15 +96,14 @@ public class TeleOpDrive extends LinearOpMode {
     boolean droppingSample = false;
     boolean grabbing = false;
     boolean intakingy = false;
+    boolean transfer = false;
 
     //defining length of arms in servo linkage in inches
-    double arm1 = 2.814920799212598;
+    double arm1 = 6.77165172;
     double arm2 = 10.078740275590551;
     double distanceArm1AboveArm2 = 0.34252;
-
-
     @Override
-    public void runOpMode() throws InterruptedException {
+    public void runOpMode()  {
         initHardware();
         initLocalizer();
         initOpenCv();
@@ -140,7 +125,6 @@ public class TeleOpDrive extends LinearOpMode {
 
         }
     }
-
     private void processDrivingRobot(){
         double denominator = Math.max(Math.abs(ly1) + Math.abs(lx1) + Math.abs(rx1), 1);
         double frontLeftPower = (ly1 + lx1 + rx1) / denominator;
@@ -153,7 +137,6 @@ public class TeleOpDrive extends LinearOpMode {
         driveFrontRight.setPower(frontRightPower);
         driveBackRight.setPower(backRightPower);
     }
-
     private void processDrivingField(){
         double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
 
@@ -177,13 +160,11 @@ public class TeleOpDrive extends LinearOpMode {
         driveFrontRight.setPower(frontRightPower);
         driveBackRight.setPower(backRightPower);
     }
-
     private void initLocalizer(){
         /*Pose2d initpos = new Pose2d(new Vector2d(-72, 0), Math.toRadians(90));
         localizer.setPose(initpos);
         drive = new MecanumDrive(hardwareMap, initpos);*/
     }
-
     private void processControl() {
         if (gamepad1.options) {
             imu.resetYaw();
@@ -236,14 +217,9 @@ public class TeleOpDrive extends LinearOpMode {
         if(intakingWall) { intakeWall(); }
         if(droppingSample) { dropSample(); }
         if(intakingy){autoIntakeSample("yellow");}
+        if(transfer){transferSample();}
 
-        if (pincherOpen) {
-            pincher.setPosition(PINCHER_OPEN);
-        } else {
-            pincher.setPosition(PINCHER_CLOSED);
-        }
     }
-
     //TODO get position from roadrunner so we can give to VisionPipelines
     private void processVariableUpdates() {
         ly1 = -gamepad1.left_stick_y;
@@ -267,13 +243,11 @@ public class TeleOpDrive extends LinearOpMode {
         //alliaceVisionPipeline.position = Arrays.asList(camerapos.x, camerapos.y,Math.toDegrees(localizer.getPose().heading.toDouble())+180);
         //yellowVisionPipeline.position = Arrays.asList(camerapos.x, camerapos.y,Math.toDegrees(localizer.getPose().heading.toDouble())+180);
     }
-
     private void processTelemetry(){
         telemetry.addData("Alliance", alliance == 0 ? "Red" : "Blue");
         telemetry.addData("Specimen State", specimenState);
         telemetry.update();
     }
-
     private void initHardware() {
         driveFrontLeft = hardwareMap.get(DcMotor.class, "driveFrontLeft");
         driveFrontLeft.setMode(STOP_AND_RESET_ENCODER);
@@ -339,7 +313,6 @@ public class TeleOpDrive extends LinearOpMode {
                 pincher,
                 //claw,
                 telemetry,
-                webcam1,
                 this
         );
 
@@ -366,7 +339,6 @@ public class TeleOpDrive extends LinearOpMode {
                 .build();
     }
     // Action Methods
-
     boolean slidesPastTolerance(){
         if(
                 outtakeSlideLeft.getTargetPosition() - outtakeSlideLeft.getCurrentPosition() < 250 ||
@@ -377,7 +349,6 @@ public class TeleOpDrive extends LinearOpMode {
         ) { return true; } else { return false; }
 
     }
-
     void dropSample (){
             if(timer.milliseconds() > 1000) {
                 bot.runIntake(RunStates.DROP_FRONT, 1);
@@ -385,13 +356,9 @@ public class TeleOpDrive extends LinearOpMode {
                 droppingSample = false;
             }
     }
-
     void autoIntakeSample(String color) {
         double distaceForward = 0;
         double sAngle = 0;
-
-            boolean insideSub = false;
-
 
             if (color == "yellow") {
                 if (!yellowVisionPipeline.nothingThere) {
@@ -445,6 +412,7 @@ public class TeleOpDrive extends LinearOpMode {
 //            }
 
             //Actions.runBlocking(tab1.build());
+
             telemetry.addData("distance forward",distaceForward);
             telemetry.update();
             //bot.runIntake(RunStates.PICKING, 1);
@@ -457,9 +425,14 @@ public class TeleOpDrive extends LinearOpMode {
                 pincherRotator.setPosition(sAngle / 300);
 
                 if(timer.milliseconds()>1000){
-                bot.runIntake(RunStates.GRAB, 1);}
-                intakeeFirst = true;
-                intakingy = false;
+                bot.runIntake(RunStates.GRAB, 1);
+                    intakeeFirst = true;
+                    intakingy = false;
+                    transfer = true;
+
+
+                }
+
 
             }
             telemetry.addData("angle",getLinkageAngle(distaceForward));
@@ -479,7 +452,6 @@ public class TeleOpDrive extends LinearOpMode {
             outtakingBasket = false;
         }
     }
-
     void outtakeChamber(){
         if(specimenState == 1){
             bot.runIntake(RunStates.PREPARE_CHAMBER, 1);
@@ -487,7 +459,6 @@ public class TeleOpDrive extends LinearOpMode {
             bot.runIntake(RunStates.SCORE_CHAMBER, 1);
         }
     }
-
     void intakeWall() {
         if (timer.milliseconds() > 1000) {
             bot.runIntake(RunStates.GRAB_WALL, 1);
@@ -500,18 +471,15 @@ public class TeleOpDrive extends LinearOpMode {
             intakingWall = false;
         }
     }
-
     void transferSample(){
-        bot.runIntake(RunStates.TRANSFER, 1);
+        bot.runIntake(RunStates.TRANSFER, 1); transfer = false;
     }
-
     private double getLinkageAngle(double m){
         if(OptionalDouble.of(Math.abs((90 - (Math.acos((Math.toRadians((((Math.pow(m , 2) - Math.pow(arm2, 2) + Math.pow(distanceArm1AboveArm2, 2)) / arm1) + arm1) / 5) / (2 * Math.sqrt(Math.pow(distanceArm1AboveArm2, 2) + Math.pow(m , 2)))) + Math.atan(Math.toRadians((m ) / distanceArm1AboveArm2))))) / 300))!=null){
             return Math.abs((90-(Math.acos(Math.toRadians((((Math.pow(m,2)-Math.pow(arm2,2)+Math.pow(distanceArm1AboveArm2,2))/arm1)+arm1)/5)/(2*Math.sqrt(Math.pow(distanceArm1AboveArm2,2)+Math.pow(m,2))))+Math.atan(Math.toRadians((m)/distanceArm1AboveArm2)))))/300;
         }
         return(0);
     }
-
     private Point transformPosition(Point robot, double degreesR, Point offset) {
         /*
          * Transform the object's position relative to the robot to the field's coordinate system.
