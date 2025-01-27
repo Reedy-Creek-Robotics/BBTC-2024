@@ -28,6 +28,7 @@ import org.firstinspires.ftc.teamcode.modules.RunStates;
 public class TeleOpNoCam extends LinearOpMode {
     ElapsedTime buttonDebounce;
     ElapsedTime timer;
+    ElapsedTime transferTimer;
 
     // Delay between button presses in ms
     static int buttonDelay = 250;
@@ -65,12 +66,15 @@ public class TeleOpNoCam extends LinearOpMode {
     boolean intakeSlideOut = false;
     boolean outtakeSlideUp = false;
     boolean robotDrive = true;
+    boolean transferring = false;
 
     @Override
     public void runOpMode()  {
         initHardware();
         buttonDebounce = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
         timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+        transferTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+
 
         telemetry.addLine("> PRESS START");
         waitForStart();
@@ -164,6 +168,7 @@ public class TeleOpNoCam extends LinearOpMode {
             if(outtakeSlideUp == false){
                 basketUp = false;
             }
+            transferTimer.reset();
         }
 
 
@@ -185,8 +190,17 @@ public class TeleOpNoCam extends LinearOpMode {
 
         if(gamepad1.b && buttonDebounce.milliseconds() > buttonDelay){
             bot.runIntake(RunStates.HOLD, 1);
+            intakeSlideOut = false;
             pincherRotatorPos = 0.65;
+            basketUp = false;
+            outtakeSlideUp = false;
             buttonDebounce.reset();
+            transferring = true;
+        }
+
+        if(transferring && transferTimer.milliseconds() > 500){
+            clawOpen = true;
+            transferring = false;
         }
 
         pincherRotator.setPosition(pincherRotatorPos);
@@ -290,11 +304,8 @@ public class TeleOpNoCam extends LinearOpMode {
         );
 
         imu = hardwareMap.get(IMU.class, "imu");
-
-        IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
+        imu.initialize(new IMU.Parameters(new RevHubOrientationOnRobot(
                 RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
-                RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD));
-
-        imu.initialize(parameters);
+                RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD)));
     }
 }
