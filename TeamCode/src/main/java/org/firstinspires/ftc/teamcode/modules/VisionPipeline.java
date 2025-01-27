@@ -3,6 +3,8 @@ package org.firstinspires.ftc.teamcode.modules;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 
+import com.google.blocks.ftcrobotcontroller.runtime.obsolete.TfodCustomModelAccess;
+
 import org.firstinspires.ftc.robotcore.internal.camera.calibration.CameraCalibration;
 import org.firstinspires.ftc.vision.VisionProcessor;
 import org.opencv.calib3d.Calib3d;
@@ -23,6 +25,7 @@ import java.util.List;
 
 
 public class VisionPipeline implements VisionProcessor {
+
     final double width = 1920;
     final double height = 1080;
     final double screenCenterX = width / 2;
@@ -84,7 +87,6 @@ public class VisionPipeline implements VisionProcessor {
     @Override
     public Object processFrame(Mat frame, long captureTimeNanos) {
         editingFrame = frame;
-        //Calib3d.undistort(frame,editingFrame,cameraMatrix,distCoeffs);
         long startTime = System.nanoTime();
         List<List<Object>> samplesData = new ArrayList<>();
         preprocess(editingFrame);
@@ -243,12 +245,10 @@ public class VisionPipeline implements VisionProcessor {
             xAngle = -xAngle;
         }
         double yRealWorld = distanceOffGround / Math.tan(Math.toRadians(yAngleDown));
-        double xRealWorld = Math.tan(xAngle) * yRealWorld;
+        double xRealWorld = Math.tan(Math.toRadians(xAngle)) * yRealWorld;
         if (xIsNegative)
             xRealWorld = -xRealWorld;
         return  new Point(xRealWorld, yRealWorld);
-
-
     }
 
     private Point transformPosition(Point robot, double degreesR, Point offset) {
