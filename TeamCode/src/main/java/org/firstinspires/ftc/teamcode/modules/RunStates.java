@@ -3,9 +3,9 @@ package org.firstinspires.ftc.teamcode.modules;
 public enum RunStates {
     // Sets the Intake just in front of the bot, so slides can lift safely
     DEFAULT(
-            0.54,
+            0.59,
             0.63,
-            0.02,
+            0.05,
             0.75,
             0.38,
             true,
