@@ -33,12 +33,15 @@ public class MeepMeepTesting {
                 .build();
 
         BlueBasket.runAction(BlueBasket.getDrive().actionBuilder(new Pose2d(23-(WIDTH/2), 72-(HEIGHT/2), Math.toRadians(90)))
-                .setReversed(true)
-                //.splineTo(new Vector2d(48, 48), Math.toRadians(45))
-                .splineTo(new Vector2d(58, 58), Math.toRadians(45))
-                .build());
+                        .setReversed(true)
+                        .splineTo(new Vector2d(55, 55), Math.toRadians(45))
 
+                        .waitSeconds(1)
 
+                        .setReversed(false)
+                        .turnTo(Math.toRadians(180))
+                        .strafeTo(new Vector2d(-48, 60))
+                        .build());
 
         RoadRunnerBotEntity BlueObservation = new DefaultBotBuilder(meepMeep)
                 // Set bot constraints: maxVel, maxAccel, maxAngVel, maxAngAccel, track width

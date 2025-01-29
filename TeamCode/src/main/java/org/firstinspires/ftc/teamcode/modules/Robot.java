@@ -36,8 +36,8 @@ public class Robot {
             BASKET_DOWN = 0.42,
             INTAKE_SLIDE_OUT = 0.47,
             INTAKE_SLIDE_IN = 0.73,
-            OUTTAKE_SLIDE_UP = 3200,
-            OUTTAKE_SLIDE_DOWN = 0;
+            OUTTAKE_SLIDE_UP = 3100,
+            OUTTAKE_SLIDE_DOWN = 100;
 
     public Robot(
             DcMotor driveFrontLeft,
