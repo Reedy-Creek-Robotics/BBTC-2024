@@ -28,14 +28,16 @@ public class BaseAuto {
 
         public OuttakeSlide(HardwareMap hardwareMap){
             outtakeSlideRight = hardwareMap.get(DcMotor.class, "outtakeSlideRight");
-            outtakeSlideRight.setMode(RUN_USING_ENCODER);
-            outtakeSlideRight.setZeroPowerBehavior(BRAKE);
-            outtakeSlideLeft.setDirection(FORWARD);
+            outtakeSlideRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            outtakeSlideRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            outtakeSlideRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            outtakeSlideRight.setDirection(DcMotor.Direction.FORWARD);
 
             outtakeSlideLeft = hardwareMap.get(DcMotor.class, "outtakeSlideLeft");
-            outtakeSlideLeft.setMode(RUN_USING_ENCODER);
-            outtakeSlideLeft.setZeroPowerBehavior(BRAKE);
-            outtakeSlideLeft.setDirection(REVERSE);
+            outtakeSlideLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            outtakeSlideLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            outtakeSlideLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            outtakeSlideLeft.setDirection(DcMotor.Direction.REVERSE);
         }
 
         public class OuttakeSlideUp implements Action {
@@ -43,27 +45,27 @@ public class BaseAuto {
 
             @Override
             public boolean run(@NonNull TelemetryPacket packet){
-                    if(!initialized){
-                         outtakeSlideLeft.setPower(1);
-                         outtakeSlideRight.setPower(1);
-                         initialized = true;
-                    }
+                if(!initialized){
+                    outtakeSlideLeft.setPower(1);
+                    outtakeSlideRight.setPower(1);
+                    initialized = true;
+                }
 
-                    double pos = (outtakeSlideLeft.getCurrentPosition() + outtakeSlideRight.getCurrentPosition()) / 2;
-                    packet.put("Outtake Slide Pos", pos);
+                double pos = (outtakeSlideLeft.getCurrentPosition() + outtakeSlideRight.getCurrentPosition()) / 2;
+                packet.put("Outtake Slide Pos", pos);
 
-                    if(pos < Robot.OUTTAKE_SLIDE_UP){
-                        return true;
-                    } else {
-                        outtakeSlideLeft.setPower(0);
-                        outtakeSlideRight.setPower(0);
-                        return false;
-                    }
+                if(pos < Robot.OUTTAKE_SLIDE_UP){
+                    return true;
+                } else {
+                    outtakeSlideLeft.setPower(0);
+                    outtakeSlideRight.setPower(0);
+                    return false;
+                }
             }
         }
 
         public Action outtakeSlideUp(){
-            return new OuttakeSlideUp();
+            return new OuttakeSlide.OuttakeSlideUp();
         }
 
         public class OuttakeSlideDown implements Action{
@@ -80,7 +82,7 @@ public class BaseAuto {
                 double pos = (outtakeSlideLeft.getCurrentPosition() + outtakeSlideRight.getCurrentPosition()) / 2;
                 packet.put("Outtake Slide Pos", pos);
 
-                if(pos < Robot.OUTTAKE_SLIDE_DOWN){
+                if(pos > Robot.OUTTAKE_SLIDE_DOWN){
                     return true;
                 } else {
                     outtakeSlideLeft.setPower(0);
@@ -91,7 +93,7 @@ public class BaseAuto {
         }
 
         public Action outtakeSlideDown(){
-            return new OuttakeSlideDown();
+            return new OuttakeSlide.OuttakeSlideDown();
         }
 
     }
@@ -103,18 +105,18 @@ public class BaseAuto {
             basket = hardwareMap.get(Servo.class, "basket");
         }
 
-            public class BasketUp implements Action {
+        public class BasketUp implements Action {
 
-                @Override
-                public boolean run(@NonNull TelemetryPacket packet) {
-                    basket.setPosition(Robot.BASKET_UP);
-                    return false;
-                }
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                basket.setPosition(Robot.BASKET_UP);
+                return false;
             }
-            
-            public Action basketUp(){
-                return new BasketUp();
-            }
+        }
+
+        public Action basketUp(){
+            return new Basket.BasketUp();
+        }
 
         public class BasketDown implements Action {
 
@@ -126,29 +128,29 @@ public class BaseAuto {
         }
 
         public Action basketDown(){
-            return new BasketDown();
+            return new Basket.BasketDown();
         }
     }
-    
+
     public class Pincher {
         private Servo pincher;
-        
+
         public Pincher(HardwareMap hardwareMap){
-               pincher = hardwareMap.get(Servo.class, "pincher");
+            pincher = hardwareMap.get(Servo.class, "pincher");
         }
-        
-            public class PincherOpen implements Action {
-     
-               @Override
-               public boolean run(@NonNull TelemetryPacket packet) {
-                     pincher.setPosition(Robot.PINCHER_OPEN);
-                     return false;
-               }
+
+        public class PincherOpen implements Action {
+
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                pincher.setPosition(Robot.PINCHER_OPEN);
+                return false;
             }
-            
-            public Action pincherOpen(){
-                return new PincherOpen();
-            }
+        }
+
+        public Action pincherOpen(){
+            return new Pincher.PincherOpen();
+        }
 
         public class PincherClose implements Action {
 
@@ -160,11 +162,11 @@ public class BaseAuto {
         }
 
         public Action pincherClose(){
-            return new PincherClose();
+            return new Pincher.PincherClose();
         }
     }
 
-    public class Claw {
+    /*public class Claw {
         private Servo claw;
 
         public Claw(HardwareMap hardwareMap){
@@ -196,11 +198,11 @@ public class BaseAuto {
         public Action clawClose(){
                return new ClawClose();
         }
-    }
-    
+    }*/
+
     public class IntakeSlide{
         private Servo intakeSlide;
-        
+
         public IntakeSlide(HardwareMap hardwareMap){
             intakeSlide = hardwareMap.get(Servo.class, "intakeSlide");
         }
@@ -215,19 +217,19 @@ public class BaseAuto {
         }
 
         public Action intakeSlideIn(){
-            return new IntakeSlideIn();
+            return new IntakeSlide.IntakeSlideIn();
         }
 
         public class IntakeSlideOut implements Action{
-               @Override
-               public boolean run(@NonNull TelemetryPacket packet) {
-                    intakeSlide.setPosition(Robot.INTAKE_SLIDE_OUT);
-                    return false;
-               }
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                intakeSlide.setPosition(Robot.INTAKE_SLIDE_OUT);
+                return false;
+            }
         }
 
         public Action intakeSlideOut(){
-            return new IntakeSlideOut();
+            return new IntakeSlide.IntakeSlideOut();
         }
     }
 
@@ -246,33 +248,33 @@ public class BaseAuto {
             }
         }
 
-            public Action intakeArmDefault(){
-               return new IntakeArmDefault();
-            }
+        public Action intakeArmDefault(){
+            return new IntakeArm.IntakeArmDefault();
+        }
 
-            public class IntakeArmGrab implements Action {
-                @Override
-                public boolean run(@NonNull TelemetryPacket packet) {
-                    intakeArm.setPosition(RunStates.GRAB.getArmPos());
-                    return false;
-                }
+        public class IntakeArmGrab implements Action {
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                intakeArm.setPosition(RunStates.GRAB.getArmPos());
+                return false;
             }
+        }
 
-            public Action intakeArmGrab(){
-                return new IntakeArmGrab();
-            }
+        public Action intakeArmGrab(){
+            return new IntakeArm.IntakeArmGrab();
+        }
 
-            public class IntakeArmTransfer implements Action {
-                @Override
-                public boolean run(@NonNull TelemetryPacket packet) {
-                    intakeArm.setPosition(RunStates.TRANSFER.getArmPos());
-                    return false;
-                }
+        public class IntakeArmTransfer implements Action {
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                intakeArm.setPosition(RunStates.TRANSFER.getArmPos());
+                return false;
             }
+        }
 
-            public Action intakeArmTransfer(){
-                return new IntakeArmTransfer();
-            }
+        public Action intakeArmTransfer(){
+            return new IntakeArm.IntakeArmTransfer();
+        }
     }
 
     public class PincherRotator{
@@ -288,22 +290,22 @@ public class BaseAuto {
                 pincherRotator.setPosition(.35);
                 return false;
             }
+        }
 
-            public Action pincherRotatorLine(){
-                return new PincherRotatorLine();
-            }
+        public Action pincherRotatorLine(){
+            return new PincherRotator.PincherRotatorLine();
+        }
 
-            public class PincherRotatorTurned implements Action {
-                @Override
-                public boolean run(@NonNull TelemetryPacket packet) {
-                    pincherRotator.setPosition(.65);
-                    return false;
-                }
+        public class PincherRotatorTurned implements Action {
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                pincherRotator.setPosition(.65);
+                return false;
             }
+        }
 
-            public Action pincherRotatorTurned(){
-                return new PincherRotatorTurned();
-            }
+        public Action pincherRotatorTurned(){
+            return new PincherRotator.PincherRotatorTurned();
         }
     }
 
@@ -323,7 +325,7 @@ public class BaseAuto {
         }
 
         public Action intakeRotatorDefault(){
-            return new IntakeRotatorDefault();
+            return new IntakeRotator.IntakeRotatorDefault();
         }
 
         public class IntakeRotatorPicking implements Action{
@@ -335,7 +337,7 @@ public class BaseAuto {
         }
 
         public Action intakeRotatorPicking(){
-            return new IntakeRotatorPicking();
+            return new IntakeRotator.IntakeRotatorPicking();
         }
 
         public class IntakeRotatorGrab implements Action {
@@ -347,7 +349,7 @@ public class BaseAuto {
         }
 
         public Action intakeRotatorGrab(){
-            return new IntakeRotatorGrab();
+            return new IntakeRotator.IntakeRotatorGrab();
         }
 
         public class IntakeRotatorTransfer implements Action {
@@ -359,7 +361,7 @@ public class BaseAuto {
         }
 
         public Action intakeRotatorTransfer(){
-            return new IntakeRotatorTransfer();
+            return new IntakeRotator.IntakeRotatorTransfer();
         }
     }
 }
