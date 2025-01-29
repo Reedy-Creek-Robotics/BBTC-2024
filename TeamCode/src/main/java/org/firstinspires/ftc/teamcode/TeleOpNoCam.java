@@ -192,13 +192,14 @@ public class TeleOpNoCam extends LinearOpMode {
             outtakeSlideUp = false;
             buttonDebounce.reset();
             transferring = true;
+            transferTimer.reset();
         }
 
-        if(transferring && transferTimer.milliseconds() > 500){
+        if(transferring && transferTimer.milliseconds() > 1000){
             clawOpen = true;
         }
 
-        if(transferring && transferTimer.milliseconds() > 750) {
+        if(transferring && transferTimer.milliseconds() > 1250) {
             bot.runIntake(RunStates.DEFAULT, 1);
             transferring = false;
         }

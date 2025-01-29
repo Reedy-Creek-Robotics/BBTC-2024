@@ -250,33 +250,33 @@ public class BlueBasket extends LinearOpMode {
             }
         }
 
-            public Action intakeArmDefault(){
-               return new IntakeArmDefault();
-            }
+        public Action intakeArmDefault(){
+            return new IntakeArmDefault();
+        }
 
-            public class IntakeArmGrab implements Action {
-                @Override
-                public boolean run(@NonNull TelemetryPacket packet) {
-                    intakeArm.setPosition(RunStates.GRAB.getArmPos());
-                    return false;
-                }
+        public class IntakeArmGrab implements Action {
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                intakeArm.setPosition(RunStates.GRAB.getArmPos());
+                return false;
             }
+        }
 
-            public Action intakeArmGrab(){
-                return new IntakeArmGrab();
-            }
+        public Action intakeArmGrab(){
+            return new IntakeArmGrab();
+        }
 
-            public class IntakeArmTransfer implements Action {
-                @Override
-                public boolean run(@NonNull TelemetryPacket packet) {
-                    intakeArm.setPosition(RunStates.TRANSFER.getArmPos());
-                    return false;
-                }
+        public class IntakeArmTransfer implements Action {
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                intakeArm.setPosition(RunStates.TRANSFER.getArmPos());
+                return false;
             }
+        }
 
-            public Action intakeArmTransfer(){
-                return new IntakeArmTransfer();
-            }
+        public Action intakeArmTransfer(){
+            return new IntakeArmTransfer();
+        }
     }
 
     public class PincherRotator{
@@ -292,22 +292,22 @@ public class BlueBasket extends LinearOpMode {
                 pincherRotator.setPosition(.35);
                 return false;
             }
+        }
 
-            public Action pincherRotatorLine(){
-                return new PincherRotatorLine();
-            }
+        public Action pincherRotatorLine(){
+            return new PincherRotatorLine();
+        }
 
-            public class PincherRotatorTurned implements Action {
-                @Override
-                public boolean run(@NonNull TelemetryPacket packet) {
-                    pincherRotator.setPosition(.65);
-                    return false;
-                }
+        public class PincherRotatorTurned implements Action {
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                pincherRotator.setPosition(.65);
+                return false;
             }
+        }
 
-            public Action pincherRotatorTurned(){
-                return new PincherRotatorTurned();
-            }
+        public Action pincherRotatorTurned(){
+            return new PincherRotatorTurned();
         }
     }
 
@@ -385,10 +385,18 @@ public class BlueBasket extends LinearOpMode {
 
         waitForStart();
 
-        Action traj1 = drive.actionBuilder(initialPose).endTrajectory().fresh()
+        Action preloadScore = drive.actionBuilder(initialPose).endTrajectory().fresh()
                 .setReversed(true)
                 .splineTo(new Vector2d(55, 55), Math.toRadians(45))
                .build();
+
+        Action spikeGrab1 = drive.actionBuilder(drive.localizer.getPose())
+                .strafeToLinearHeading(new Vector2d(47.5, 39), Math.toRadians(270))
+                .build();
+
+        Action spikeScore1 = drive.actionBuilder(drive.localizer.getPose())
+                .strafeToLinearHeading(new Vector2d(55, 55), Math.toRadians(225))
+                .build();
 
         Action trajEnd = drive.actionBuilder(drive.localizer.getPose())
 
@@ -399,6 +407,28 @@ public class BlueBasket extends LinearOpMode {
 
         if (isStopRequested()) return;
 
+        SequentialAction intakeSample = new SequentialAction(
+                intakeSlide.intakeSlideOut(),
+                intakeArm.intakeArmGrab(),
+                intakeRotator.intakeRotatorGrab(),
+                pincherRotator.pincherRotatorTurned(),
+                pincher.pincherOpen(),
+                new SleepAction(1),
+                pincher.pincherClose(),
+                new SleepAction(0.25),
+                intakeSlide.intakeSlideIn(),
+                intakeArm.intakeArmTransfer(),
+                intakeRotator.intakeRotatorTransfer(),
+                pincherRotator.pincherRotatorTurned(),
+                new SleepAction(1),
+                pincher.pincherOpen(),
+                new SleepAction(0.25),
+                intakeArm.intakeArmDefault(),
+                intakeRotator.intakeRotatorDefault(),
+                pincherRotator.pincherRotatorTurned()
+
+        );
+
         SequentialAction outtakeSample = new SequentialAction(
                 outtakeSlide.outtakeSlideUp(),
                 basket.basketUp(),
@@ -408,8 +438,11 @@ public class BlueBasket extends LinearOpMode {
 
         Actions.runBlocking(
                 new SequentialAction(
-                        basket.basketDown(),
-                        traj1,
+                        preloadScore,
+                        outtakeSample,
+                        spikeGrab1,
+                        intakeSample,
+                        spikeScore1,
                         outtakeSample,
                         trajEnd
 
