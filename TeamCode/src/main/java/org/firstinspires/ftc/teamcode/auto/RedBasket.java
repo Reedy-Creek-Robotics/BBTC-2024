@@ -135,6 +135,10 @@ public class RedBasket extends LinearOpMode {
                         intakeSampleRegular,
                         spikeScore1,
                         outtakeSample,
+                        spikeGrab2,
+                        intakeSampleRegular,
+                        spikeScore2,
+                        outtakeSample,
                         trajEnd
 
                 )
