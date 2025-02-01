@@ -1,372 +1,19 @@
 package org.firstinspires.ftc.teamcode.auto;
 
-import androidx.annotation.NonNull;
-
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.SleepAction;
-import com.acmerobotics.roadrunner.Trajectory;
-import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.RoadRunner.MecanumDrive;
-import org.firstinspires.ftc.teamcode.modules.Robot;
-import org.firstinspires.ftc.teamcode.modules.RunStates;
+import org.firstinspires.ftc.teamcode.components.*;
 
 @Autonomous
 public class BlueBasket extends LinearOpMode {
-
-    public class OuttakeSlide {
-        private DcMotor outtakeSlideLeft;
-        private DcMotor outtakeSlideRight;
-
-        public OuttakeSlide(HardwareMap hardwareMap){
-            outtakeSlideRight = hardwareMap.get(DcMotor.class, "outtakeSlideRight");
-            outtakeSlideRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            outtakeSlideRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            outtakeSlideRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-            outtakeSlideRight.setDirection(DcMotor.Direction.FORWARD);
-
-            outtakeSlideLeft = hardwareMap.get(DcMotor.class, "outtakeSlideLeft");
-            outtakeSlideLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            outtakeSlideLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            outtakeSlideLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-            outtakeSlideLeft.setDirection(DcMotor.Direction.REVERSE);
-        }
-
-        public class OuttakeSlideUp implements Action {
-            private boolean initialized = false;
-
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet){
-                if(!initialized){
-                    outtakeSlideLeft.setPower(1);
-                    outtakeSlideRight.setPower(1);
-                    initialized = true;
-                }
-
-                double pos = (outtakeSlideLeft.getCurrentPosition() + outtakeSlideRight.getCurrentPosition()) / 2;
-                packet.put("Outtake Slide Pos", pos);
-
-                if(pos < Robot.OUTTAKE_SLIDE_UP){
-                    return true;
-                } else {
-                    outtakeSlideLeft.setPower(0);
-                    outtakeSlideRight.setPower(0);
-                    return false;
-                }
-            }
-        }
-
-        public Action outtakeSlideUp(){
-            return new OuttakeSlide.OuttakeSlideUp();
-        }
-
-        public class OuttakeSlideDown implements Action{
-            private boolean initialized = false;
-
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet){
-                if(!initialized){
-                    outtakeSlideLeft.setPower(-1);
-                    outtakeSlideRight.setPower(-1);
-                    initialized = true;
-                }
-
-                double pos = (outtakeSlideLeft.getCurrentPosition() + outtakeSlideRight.getCurrentPosition()) / 2;
-                packet.put("Outtake Slide Pos", pos);
-
-                if(pos > Robot.OUTTAKE_SLIDE_DOWN){
-                    return true;
-                } else {
-                    outtakeSlideLeft.setPower(0);
-                    outtakeSlideRight.setPower(0);
-                    return false;
-                }
-            }
-        }
-
-        public Action outtakeSlideDown(){
-            return new OuttakeSlide.OuttakeSlideDown();
-        }
-
-    }
-
-    public class Basket {
-        private Servo basket;
-
-        public Basket(HardwareMap hardwareMap){
-            basket = hardwareMap.get(Servo.class, "basket");
-        }
-
-        public class BasketUp implements Action {
-
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                basket.setPosition(Robot.BASKET_UP);
-                return false;
-            }
-        }
-
-        public Action basketUp(){
-            return new Basket.BasketUp();
-        }
-
-        public class BasketDown implements Action {
-
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                basket.setPosition(Robot.BASKET_DOWN);
-                return false;
-            }
-        }
-
-        public Action basketDown(){
-            return new Basket.BasketDown();
-        }
-    }
-
-    public class Pincher {
-        private Servo pincher;
-
-        public Pincher(HardwareMap hardwareMap){
-            pincher = hardwareMap.get(Servo.class, "pincher");
-        }
-
-        public class PincherOpen implements Action {
-
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                pincher.setPosition(Robot.PINCHER_OPEN);
-                return false;
-            }
-        }
-
-        public Action pincherOpen(){
-            return new Pincher.PincherOpen();
-        }
-
-        public class PincherClose implements Action {
-
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                pincher.setPosition(Robot.PINCHER_CLOSED);
-                return false;
-            }
-        }
-
-        public Action pincherClose(){
-            return new Pincher.PincherClose();
-        }
-    }
-
-    /*public class Claw {
-        private Servo claw;
-
-        public Claw(HardwareMap hardwareMap){
-            claw = hardwareMap.get(Servo.class, "claw");
-        }
-
-        public class ClawOpen implements Action {
-
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                claw.setPosition(Robot.CLAW_OPEN);
-                return false;
-            }
-        }
-
-        public Action clawOpen(){
-            return new ClawOpen();
-        }
-
-        public class ClawClose implements Action {
-
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                claw.setPosition(Robot.CLAW_CLOSED);
-                return false;
-            }
-        }
-
-        public Action clawClose(){
-               return new ClawClose();
-        }
-    }*/
-
-    public class IntakeSlide{
-        private Servo intakeSlide;
-
-        public IntakeSlide(HardwareMap hardwareMap){
-            intakeSlide = hardwareMap.get(Servo.class, "intakeSlide");
-        }
-
-        public class IntakeSlideIn implements Action {
-
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                intakeSlide.setPosition(Robot.INTAKE_SLIDE_IN);
-                return false;
-            }
-        }
-
-        public Action intakeSlideIn(){
-            return new IntakeSlide.IntakeSlideIn();
-        }
-
-        public class IntakeSlideOut implements Action{
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                intakeSlide.setPosition(Robot.INTAKE_SLIDE_OUT);
-                return false;
-            }
-        }
-
-        public Action intakeSlideOut(){
-            return new IntakeSlide.IntakeSlideOut();
-        }
-    }
-
-    public class IntakeArm{
-        private Servo intakeArm;
-
-        public IntakeArm(HardwareMap hardwareMap){
-            intakeArm = hardwareMap.get(Servo.class, "intakeArm");
-        }
-
-        public class IntakeArmDefault implements Action {
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                intakeArm.setPosition(RunStates.DEFAULT.getArmPos());
-                return false;
-            }
-        }
-
-        public Action intakeArmDefault(){
-            return new IntakeArm.IntakeArmDefault();
-        }
-
-        public class IntakeArmGrab implements Action {
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                intakeArm.setPosition(RunStates.GRAB.getArmPos());
-                return false;
-            }
-        }
-
-        public Action intakeArmGrab(){
-            return new IntakeArm.IntakeArmGrab();
-        }
-
-        public class IntakeArmTransfer implements Action {
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                intakeArm.setPosition(RunStates.TRANSFER.getArmPos());
-                return false;
-            }
-        }
-
-        public Action intakeArmTransfer(){
-            return new IntakeArm.IntakeArmTransfer();
-        }
-    }
-
-    public class PincherRotator{
-        private Servo pincherRotator;
-
-        public PincherRotator(HardwareMap hardwareMap){
-            pincherRotator = hardwareMap.get(Servo.class, "pincherRotator");
-        }
-
-        public class PincherRotatorLine implements Action {
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                pincherRotator.setPosition(.35);
-                return false;
-            }
-        }
-
-        public Action pincherRotatorLine(){
-            return new PincherRotator.PincherRotatorLine();
-        }
-
-        public class PincherRotatorTurned implements Action {
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                pincherRotator.setPosition(.65);
-                return false;
-            }
-        }
-
-        public Action pincherRotatorTurned(){
-            return new PincherRotator.PincherRotatorTurned();
-        }
-    }
-
-    public class IntakeRotator{
-        private Servo intakeRotator;
-
-        public IntakeRotator(HardwareMap hardwareMap){
-            intakeRotator = hardwareMap.get(Servo.class, "intakeRotator");
-        }
-
-        public class IntakeRotatorDefault implements Action {
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                intakeRotator.setPosition(RunStates.DEFAULT.getIntakeRotatorPos());
-                return false;
-            }
-        }
-
-        public Action intakeRotatorDefault(){
-            return new IntakeRotator.IntakeRotatorDefault();
-        }
-
-        public class IntakeRotatorPicking implements Action{
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                intakeRotator.setPosition(RunStates.PICKING.getIntakeRotatorPos());
-                return false;
-            }
-        }
-
-        public Action intakeRotatorPicking(){
-            return new IntakeRotator.IntakeRotatorPicking();
-        }
-
-        public class IntakeRotatorGrab implements Action {
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                intakeRotator.setPosition(RunStates.GRAB.getIntakeRotatorPos());
-                return false;
-            }
-        }
-
-        public Action intakeRotatorGrab(){
-            return new IntakeRotator.IntakeRotatorGrab();
-        }
-
-        public class IntakeRotatorTransfer implements Action {
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                intakeRotator.setPosition(RunStates.TRANSFER.getIntakeRotatorPos());
-                return false;
-            }
-        }
-
-        public Action intakeRotatorTransfer(){
-            return new IntakeRotator.IntakeRotatorTransfer();
-        }
-    }
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -388,27 +35,42 @@ public class BlueBasket extends LinearOpMode {
 
         Action preloadScore = drive.actionBuilder(initialPose).endTrajectory().fresh()
                 .setReversed(true)
-                .splineTo(new Vector2d(55, 55), Math.toRadians(45))
-               .build();
+                .splineTo(new Vector2d(54, 54), Math.toRadians(45))
+                .build();
 
         Action spikeGrab1 = drive.actionBuilder(drive.localizer.getPose())
-                .strafeToLinearHeading(new Vector2d(47.5, 39), Math.toRadians(270))
+                .setReversed(false)
+                .splineTo(new Vector2d(48, 39), Math.toRadians(270))
                 .build();
 
         Action spikeScore1 = drive.actionBuilder(drive.localizer.getPose())
-                .strafeToLinearHeading(new Vector2d(55, 55), Math.toRadians(225))
+                .setReversed(true)
+                .splineTo(new Vector2d(54, 54), Math.toRadians(45))
+                .build();
+
+        Action spikeGrab2 = drive.actionBuilder(drive.localizer.getPose())
+                .setReversed(false)
+                .splineTo(new Vector2d(58, 39), Math.toRadians(270))
+                .build();
+
+        Action spikeScore2 = drive.actionBuilder(drive.localizer.getPose())
+                .setReversed(true)
+                .splineTo(new Vector2d(54, 54), Math.toRadians(45))
                 .build();
 
         Action trajEnd = drive.actionBuilder(drive.localizer.getPose())
 
                 .setReversed(false)
-                .turnTo(Math.toRadians(180))
-                .strafeTo(new Vector2d(-48, 60))
+                .splineTo(new Vector2d(48, 24), Math.toRadians(270))
+                .turn(Math.toRadians(180))
+                .setReversed(true)
+                .splineTo(new Vector2d(20, 10), Math.toRadians(180))
                 .build();
 
         if (isStopRequested()) return;
 
-        SequentialAction intakeSample = new SequentialAction(
+        
+        SequentialAction intakeSampleRegular = new SequentialAction(
                 intakeSlide.intakeSlideOut(),
                 intakeArm.intakeArmGrab(),
                 intakeRotator.intakeRotatorGrab(),
@@ -416,23 +78,51 @@ public class BlueBasket extends LinearOpMode {
                 pincher.pincherOpen(),
                 new SleepAction(1),
                 pincher.pincherClose(),
-                new SleepAction(0.25),
+                new SleepAction(0.5),
                 intakeSlide.intakeSlideIn(),
                 intakeArm.intakeArmTransfer(),
                 intakeRotator.intakeRotatorTransfer(),
                 pincherRotator.pincherRotatorTurned(),
-                new SleepAction(1),
+                new SleepAction(1.5),
                 pincher.pincherOpen(),
-                new SleepAction(0.25),
+                new SleepAction(0.5),
                 intakeArm.intakeArmDefault(),
                 intakeRotator.intakeRotatorDefault(),
                 pincherRotator.pincherRotatorTurned()
+        );
 
+        SequentialAction intakeSampleLast = new SequentialAction(
+                intakeSlide.intakeSlideOut(),
+                intakeArm.intakeArmGrab(),
+                intakeRotator.intakeRotatorGrab(),
+                pincherRotator.pincherRotatorLine(),
+                pincher.pincherOpen(),
+                new SleepAction(1),
+                pincher.pincherClose(),
+                new SleepAction(0.5),
+                intakeSlide.intakeSlideIn(),
+                intakeArm.intakeArmTransfer(),
+                intakeRotator.intakeRotatorTransfer(),
+                pincherRotator.pincherRotatorTurned(),
+                new SleepAction(1.5),
+                pincher.pincherOpen(),
+                new SleepAction(0.5),
+                intakeArm.intakeArmDefault(),
+                intakeRotator.intakeRotatorDefault(),
+                pincherRotator.pincherRotatorTurned()
         );
 
         SequentialAction outtakeSample = new SequentialAction(
                 outtakeSlide.outtakeSlideUp(),
+                drive.actionBuilder(drive.localizer.getPose())
+                        .setReversed(true)
+                        .splineTo(new Vector2d(55, 55), Math.toRadians(45))
+                        .build(),
                 basket.basketUp(),
+                intakeSlide.intakeSlideOut(),
+                intakeArm.intakeArmDefault(),
+                intakeRotator.intakeRotatorPicking(),
+                pincher.pincherOpen(),
                 new SleepAction(0.75),
                 basket.basketDown(),
                 outtakeSlide.outtakeSlideDown());
@@ -442,7 +132,7 @@ public class BlueBasket extends LinearOpMode {
                         preloadScore,
                         outtakeSample,
                         spikeGrab1,
-                        intakeSample,
+                        intakeSampleRegular,
                         spikeScore1,
                         outtakeSample,
                         trajEnd

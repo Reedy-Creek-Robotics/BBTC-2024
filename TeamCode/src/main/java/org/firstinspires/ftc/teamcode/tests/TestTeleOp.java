@@ -5,6 +5,8 @@ import org.firstinspires.ftc.teamcode.modules.Robot;
 import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.*;
 import static com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.BRAKE;
 import static com.qualcomm.robotcore.hardware.DcMotorSimple.Direction.*;
+
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -15,6 +17,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.openftc.easyopencv.OpenCvCamera;
 
 @TeleOp(name = "TEST Tele-Op")
+@Disabled
 public class TestTeleOp extends LinearOpMode {
 
     ElapsedTime buttonDebounce;

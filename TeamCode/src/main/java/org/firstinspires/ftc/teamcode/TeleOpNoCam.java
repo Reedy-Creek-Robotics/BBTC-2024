@@ -210,12 +210,12 @@ public class TeleOpNoCam extends LinearOpMode {
             transferring = false;
         }
 
-        if(gamepad1.start&&buttonDebounce.milliseconds()>250){
+        if(gamepad1.start && buttonDebounce.milliseconds() > 250){
             hangPresses++;
             buttonDebounce.reset();
         }
 
-        if(hangPresses>=2){
+        if(hangPresses >= 2){
             hanging = true;
         }
 

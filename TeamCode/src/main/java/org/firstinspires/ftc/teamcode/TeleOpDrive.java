@@ -13,6 +13,7 @@ import android.util.Size;
 
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -32,7 +33,7 @@ import org.openftc.easyopencv.OpenCvCamera;
 
 import java.util.OptionalDouble;
 
-
+@Disabled
 @TeleOp(name = "Tele-Op Driving")
 public class TeleOpDrive extends LinearOpMode {
     ElapsedTime buttonDebounce;

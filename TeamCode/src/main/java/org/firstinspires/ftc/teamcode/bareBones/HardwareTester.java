@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.bareBones;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -13,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @TeleOp
+@Disabled
 public class HardwareTester extends OpMode {
 
     private Controller controller;
