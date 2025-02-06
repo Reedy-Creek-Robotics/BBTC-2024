@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.auto;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
+import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.SleepAction;
 import com.acmerobotics.roadrunner.Vector2d;
@@ -14,6 +15,7 @@ import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.teamcode.RoadRunner.MecanumDrive;
 import org.firstinspires.ftc.teamcode.components.*;
+import org.opencv.core.Mat;
 
 @Autonomous
 public class RedBasket extends LinearOpMode {
@@ -42,11 +44,11 @@ public class RedBasket extends LinearOpMode {
         ParallelAction spikeGrab1 = new ParallelAction(
                 drive.actionBuilder(new Pose2d(-47, -47, Math.toRadians(225))).fresh()
                         .setReversed(false)
-                        .splineTo(new Vector2d(-44, -44), Math.toRadians(90))
+                        .lineToX(-46)
+                        .turnTo(Math.toRadians(100))
+                        .lineToY(-44)
                         .build(),
                 outtakeSlide.outtakeSlideDown());
-
-        
 
         Action spikeScore1 = drive.actionBuilder(new Pose2d(-47, -39, Math.toRadians(90))).fresh()
                 .setReversed(true)
@@ -58,8 +60,8 @@ public class RedBasket extends LinearOpMode {
         ParallelAction spikeGrab2 = new ParallelAction(
                 drive.actionBuilder(new Pose2d(-50, -50, Math.toRadians(45))).fresh()
                         .setReversed(false)
-                        .splineTo(new Vector2d(-47, -46), Math.toRadians(90))
-                        .strafeTo(new Vector2d(-59, -44.5))
+                        .strafeToSplineHeading(new Vector2d(-44, -44), Math.toRadians(90))
+                        .strafeTo(new Vector2d(-59, -44))
                         .build(),
                 outtakeSlide.outtakeSlideDown());
 
@@ -85,12 +87,12 @@ public class RedBasket extends LinearOpMode {
 
         if (isStopRequested()) return;
 
-        ParallelAction endServoPositions = new ParallelAction(
-                intakeSlide.intakeSlideIn(),
-                intakeRotator.intakeRotatorDefault(),
-                intakeArm.intakeArmDefault(),
-                new SequentialAction(
-                        new SleepAction(1),
+        SequentialAction endServoPositions = new SequentialAction(
+                new SleepAction(1),
+                new ParallelAction(
+                        intakeSlide.intakeSlideIn(),
+                        intakeRotator.intakeRotatorDefault(),
+                        intakeArm.intakeArmDefault(),
                         outtakeSlide.outtakeSlideDown()
                 ));
 
@@ -100,7 +102,7 @@ public class RedBasket extends LinearOpMode {
                 intakeRotator.intakeRotatorGrab(),
                 pincherRotator.pincherRotatorTurned(),
                 pincher.pincherOpen(),
-                new SleepAction(0.5),
+                new SleepAction(1),
                 pincher.pincherClose(),
                 new SleepAction(0.5),
                 intakeSlide.intakeSlideIn(),
