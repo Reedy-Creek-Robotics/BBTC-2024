@@ -25,7 +25,7 @@ public enum RunStates {
     ),
     // Grab the sample.
     GRAB(
-            0.58,
+            0.56,
             -1,
             0,
             -1,
@@ -51,7 +51,7 @@ public enum RunStates {
             .28,
             1,
             .73,
-            0.38,
+            0.33,
             true,
             0,
             false

@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 @TeleOp
-@Disabled
 public class HardwareTester extends OpMode {
 
     private Controller controller;

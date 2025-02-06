@@ -135,8 +135,17 @@ public class TeleOpNoCam extends LinearOpMode {
     }
 
     private void processControl() {
-        if (gamepad1.options) {
-            imu.resetYaw();
+
+
+        if (gamepad1.back) {
+            outtakeSlideLeft.setMode(RUN_USING_ENCODER);
+            outtakeSlideLeft.setPower(-1);
+            outtakeSlideRight.setMode(RUN_USING_ENCODER);
+            outtakeSlideRight.setPower(-1);
+            ElapsedTime slideResetTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+            while(slideResetTimer.milliseconds() < 1000 && opModeIsActive());
+            outtakeSlideLeft.setMode(STOP_AND_RESET_ENCODER);
+            outtakeSlideRight.setMode(STOP_AND_RESET_ENCODER);
         }
 
         if(gamepad1.left_bumper && buttonDebounce.milliseconds() > buttonDelay){
@@ -201,11 +210,11 @@ public class TeleOpNoCam extends LinearOpMode {
             transferTimer.reset();
         }
 
-        if(transferring && transferTimer.milliseconds() > 1250){
+        if(transferring && transferTimer.milliseconds() > 1500){
             clawOpen = true;
         }
 
-        if(transferring && transferTimer.milliseconds() > 1500) {
+        if(transferring && transferTimer.milliseconds() > 1750) {
             bot.runIntake(RunStates.DEFAULT, 1);
             transferring = false;
         }
@@ -228,14 +237,11 @@ public class TeleOpNoCam extends LinearOpMode {
             if(hangPresses == 2) {
                 outtakeSlideRight.setTargetPosition(OUTTAKE_SLIDE_PREP_HANG);
                 outtakeSlideLeft.setTargetPosition(OUTTAKE_SLIDE_PREP_HANG);
-            }else if(hangPresses > 2){
+            }else if(gamepad1.left_stick_button && !gamepad1.start){
                 outtakeSlideRight.setTargetPosition(OUTTAKE_SLIDE_HANG);
                 outtakeSlideLeft.setTargetPosition(OUTTAKE_SLIDE_HANG);
             }
-            outtakeSlideRight.setMode(RUN_TO_POSITION);
-            outtakeSlideLeft.setMode(RUN_TO_POSITION);
-            outtakeSlideRight.setPower(1);
-            outtakeSlideLeft.setPower(1);
+
         }else {
             pincherRotator.setPosition(pincherRotatorPos);
             intakeSlide.setPosition(intakeSlideOut ? INTAKE_SLIDE_OUT : INTAKE_SLIDE_IN);
@@ -243,11 +249,11 @@ public class TeleOpNoCam extends LinearOpMode {
             basket.setPosition(basketUp ? BASKET_UP : BASKET_DOWN);
             outtakeSlideRight.setTargetPosition(outtakeSlideUp ? 3200 : 0);
             outtakeSlideLeft.setTargetPosition(outtakeSlideUp ? 3200 : 0);
-            outtakeSlideRight.setMode(RUN_TO_POSITION);
-            outtakeSlideLeft.setMode(RUN_TO_POSITION);
-            outtakeSlideRight.setPower(1);
-            outtakeSlideLeft.setPower(1);
         }
+        outtakeSlideRight.setMode(RUN_TO_POSITION);
+        outtakeSlideLeft.setMode(RUN_TO_POSITION);
+        outtakeSlideRight.setPower(1);
+        outtakeSlideLeft.setPower(1);
 
     }
 
@@ -296,12 +302,10 @@ public class TeleOpNoCam extends LinearOpMode {
         driveBackRight.setZeroPowerBehavior(BRAKE);
 
         outtakeSlideRight = hardwareMap.get(DcMotor.class, "outtakeSlideRight");
-        outtakeSlideRight.setMode(STOP_AND_RESET_ENCODER);
         outtakeSlideRight.setMode(RUN_USING_ENCODER);
         outtakeSlideRight.setZeroPowerBehavior(BRAKE);
 
         outtakeSlideLeft = hardwareMap.get(DcMotor.class, "outtakeSlideLeft");
-        outtakeSlideLeft.setMode(STOP_AND_RESET_ENCODER);
         outtakeSlideLeft.setMode(RUN_USING_ENCODER);
         outtakeSlideLeft.setZeroPowerBehavior(BRAKE);
         outtakeSlideLeft.setDirection(REVERSE);
