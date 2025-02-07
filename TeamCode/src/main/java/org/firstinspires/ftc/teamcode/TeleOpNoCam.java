@@ -90,18 +90,16 @@ public class TeleOpNoCam extends LinearOpMode {
         bot.runIntake(RunStates.DEFAULT, 1);
 
         while(opModeIsActive()) {
-
             processVariableUpdates();
-            if(robotDrive) {processDrivingRobot();}
-            else {processDrivingField();}
+            processDrivingRobot();
             processControl();
             processTelemetry();
-
         }
         driveFrontLeft.setZeroPowerBehavior(FLOAT);
         driveBackLeft.setZeroPowerBehavior(FLOAT);
         driveFrontRight.setZeroPowerBehavior(FLOAT);
         driveBackRight.setZeroPowerBehavior(FLOAT);
+        stop();
     }
     private void processDrivingRobot(){
         double denominator = Math.max(Math.abs(ly1) + Math.abs(lx1) + Math.abs(rx1), 1);
@@ -109,29 +107,6 @@ public class TeleOpNoCam extends LinearOpMode {
         double backLeftPower = (ly1 - lx1 + rx1) / denominator;
         double frontRightPower = (ly1 - lx1 - rx1) / denominator;
         double backRightPower = (ly1 + lx1 - rx1) / denominator;
-
-        driveFrontLeft.setPower(frontLeftPower);
-        driveBackLeft.setPower(backLeftPower);
-        driveFrontRight.setPower(frontRightPower);
-        driveBackRight.setPower(backRightPower);
-    }
-    private void processDrivingField(){
-        double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
-
-        // Rotate the movement direction counter to the bot's rotation
-        rotX = lx1 * Math.cos(-botHeading) - ly1 * Math.sin(-botHeading);
-        rotY = lx1 * Math.sin(-botHeading) + ly1 * Math.cos(-botHeading);
-
-        rotX *= 1.1;  // Counteract imperfect strafing
-
-        // Denominator is the largest motor power (absolute value) or 1
-        // This ensures all the powers maintain the same ratio,
-        // but only if at least one is out of the range [-1, 1]
-        double denominator = Math.max(Math.abs(rotY) + Math.abs(rotX) + Math.abs(rx1), 1);
-        double frontLeftPower = (rotY + rotX + rx1) / denominator;
-        double backLeftPower = (rotY - rotX + rx1) / denominator;
-        double frontRightPower = (rotY - rotX - rx1) / denominator;
-        double backRightPower = (rotY + rotX - rx1) / denominator;
 
         driveFrontLeft.setPower(frontLeftPower);
         driveBackLeft.setPower(backLeftPower);
