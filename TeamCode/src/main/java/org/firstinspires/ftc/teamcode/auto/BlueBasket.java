@@ -31,6 +31,15 @@ public class BlueBasket extends LinearOpMode {
         PincherRotator pincherRotator = new PincherRotator(hardwareMap);
         IntakeRotator intakeRotator = new IntakeRotator(hardwareMap);
 
+        SequentialAction endServoPositions = new SequentialAction(
+                new SleepAction(1),
+                new ParallelAction(
+                        intakeSlide.intakeSlideIn(),
+                        intakeRotator.intakeRotatorDefault(),
+                        intakeArm.intakeArmDefault(),
+                        outtakeSlide.outtakeSlideDown()
+                ));
+
         Actions.runBlocking(basket.basketDown());
 
         Action preloadScore = drive.actionBuilder(initialPose).endTrajectory().fresh()
@@ -41,7 +50,7 @@ public class BlueBasket extends LinearOpMode {
         ParallelAction spikeGrab1 = new ParallelAction(
                 drive.actionBuilder(new Pose2d(50, 50, Math.toRadians(225))).fresh()
                 .setReversed(false)
-                .splineTo(new Vector2d(46, 44), Math.toRadians(275))
+                .splineTo(new Vector2d(44, 43), Math.toRadians(275))
                 .build(),
                 outtakeSlide.outtakeSlideDown());
 
@@ -53,8 +62,8 @@ public class BlueBasket extends LinearOpMode {
         ParallelAction spikeGrab2 = new ParallelAction(
                 drive.actionBuilder(new Pose2d(50, 50, Math.toRadians(225))).fresh()
                 .setReversed(false)
-                .splineTo(new Vector2d(47, 45), Math.toRadians(270))
-                .strafeTo(new Vector2d(60, 45))
+                .splineTo(new Vector2d(47, 44), Math.toRadians(270))
+                .strafeTo(new Vector2d(60, 44))
                 .build(),
                 outtakeSlide.outtakeSlideDown());
 
@@ -75,11 +84,6 @@ public class BlueBasket extends LinearOpMode {
                 );
 
         if (isStopRequested()) return;
-
-        ParallelAction endServoPositions = new ParallelAction(
-                intakeSlide.intakeSlideIn(),
-                intakeRotator.intakeRotatorDefault(),
-                intakeArm.intakeArmDefault());
         
         SequentialAction intakeSample1 = new SequentialAction(
                 intakeSlide.intakeSlideOut(),
@@ -179,8 +183,6 @@ public class BlueBasket extends LinearOpMode {
                                 .build(),
                         basket.basketDown());
 
-
-
         waitForStart();
 
         Actions.runBlocking(
@@ -195,8 +197,8 @@ public class BlueBasket extends LinearOpMode {
                         intakeSample2,
                         spikeScore2,
                         outtakeSample3,
-                        endServoPositions,
-                        trajEnd
+                        endServoPositions/*,
+                        trajEnd*/
                 )
         );
     }

@@ -204,7 +204,7 @@ public class TeleOpNoCam extends LinearOpMode {
             intakeSlideOut = false;
             pincherRotatorPos = 0.65;
             basketUp = false;
-            outtakeSlideUp = false;
+            //outtakeSlideUp = false;
             buttonDebounce.reset();
             transferring = true;
             transferTimer.reset();
@@ -237,7 +237,7 @@ public class TeleOpNoCam extends LinearOpMode {
             if(hangPresses == 2) {
                 outtakeSlideRight.setTargetPosition(OUTTAKE_SLIDE_PREP_HANG);
                 outtakeSlideLeft.setTargetPosition(OUTTAKE_SLIDE_PREP_HANG);
-            }else if(gamepad1.left_stick_button && !gamepad1.start){
+            }else if(gamepad1.left_stick_button){
                 outtakeSlideRight.setTargetPosition(OUTTAKE_SLIDE_HANG);
                 outtakeSlideLeft.setTargetPosition(OUTTAKE_SLIDE_HANG);
             }
