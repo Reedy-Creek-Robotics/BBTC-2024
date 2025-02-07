@@ -277,11 +277,9 @@ public class TeleOpNoCam extends LinearOpMode {
     }
     private void processTelemetry(){
         telemetry.addData("Basket Up", basketUp);
-        telemetry.addData("Claw Open", clawOpen);
         telemetry.addData("Intake Out", intakeSlideOut);
         telemetry.addData("Outtake Up", outtakeSlideUp);
         telemetry.addData("Pincher Open", clawOpen);
-        telemetry.addData("Driving Mode", robotDrive ? "Robot" : "Field");
         telemetry.addData("Outtake Slide Pos", outtakeSlideLeft.getCurrentPosition());
         telemetry.addData("Pincher Rotator Position", pincherRotatorPos);
         telemetry.addData("hangPresses", hangPresses);
