@@ -30,6 +30,8 @@ import org.firstinspires.ftc.teamcode.modules.VisionPipeline;
 
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.opencv.core.Point;
+import org.opencv.features2d.SimpleBlobDetector;
+import org.opencv.features2d.SimpleBlobDetector_Params;
 import org.openftc.easyopencv.OpenCvCamera;
 
 import java.lang.reflect.Array;
@@ -143,7 +145,7 @@ public class TeleOpDrive extends LinearOpMode {
         driveBackRight.setPower(backRightPower);
     }
     private void initLocalizer() {
-        Pose2d initpos = new Pose2d(new Vector2d(-72, 0), Math.toRadians(90));
+        Pose2d initpos = new Pose2d(-14.125, -64, Math.toRadians(270-180));
         localizer = new ThreeDeadWheelLocalizer(hardwareMap,0.0029487, initpos);
         drive = new MecanumDrive(hardwareMap, initpos);
     }
@@ -221,9 +223,9 @@ public class TeleOpDrive extends LinearOpMode {
         }
         //position updates
         localizer.update();
-        Point camerapos = transformPosition(new Point(localizer.getPose().position.x,localizer.getPose().position.y), 180, new Point(-146.00000, -180.68629));
-        alliaceVisionPipeline.position = Arrays.asList(camerapos.x, camerapos.y,Math.toDegrees(localizer.getPose().heading.toDouble())+180);
-        yellowVisionPipeline.position = Arrays.asList(camerapos.x, camerapos.y,Math.toDegrees(localizer.getPose().heading.toDouble())+180);
+        Point camerapos = transformPosition(new Point(localizer.getPose().position.x,localizer.getPose().position.y), 0, new Point(6.825, 6.5));
+        alliaceVisionPipeline.position = Arrays.asList(camerapos.x, camerapos.y,Math.toDegrees(localizer.getPose().heading.toDouble()));
+        yellowVisionPipeline.position = Arrays.asList(camerapos.x, camerapos.y,Math.toDegrees(localizer.getPose().heading.toDouble()));
     }
 
     private void processTelemetry(){
@@ -235,35 +237,34 @@ public class TeleOpDrive extends LinearOpMode {
     private void initHardware() {
         driveFrontLeft = hardwareMap.get(DcMotor.class, "driveFrontLeft");
         driveFrontLeft.setMode(STOP_AND_RESET_ENCODER);
-        driveFrontLeft.setMode(RUN_USING_ENCODER);
         driveFrontLeft.setZeroPowerBehavior(BRAKE);
         driveFrontLeft.setDirection(REVERSE);
 
         driveFrontRight = hardwareMap.get(DcMotor.class, "driveFrontRight");
         driveFrontRight.setMode(STOP_AND_RESET_ENCODER);
-        driveFrontRight.setMode(RUN_USING_ENCODER);
+        driveFrontRight.setMode(RUN_WITHOUT_ENCODER);
         driveFrontRight.setZeroPowerBehavior(BRAKE);
 
         driveBackLeft = hardwareMap.get(DcMotor.class, "driveBackLeft");
         driveBackLeft.setMode(STOP_AND_RESET_ENCODER);
-        driveBackLeft.setMode(RUN_USING_ENCODER);
+        driveBackLeft.setMode(RUN_WITHOUT_ENCODER);
         driveBackLeft.setZeroPowerBehavior(BRAKE);
         driveBackLeft.setDirection(REVERSE);
 
         driveBackRight = hardwareMap.get(DcMotor.class, "driveBackRight");
         driveBackRight.setMode(STOP_AND_RESET_ENCODER);
-        driveBackRight.setMode(RUN_USING_ENCODER);
+        driveBackRight.setMode(RUN_WITHOUT_ENCODER);
         driveBackRight.setZeroPowerBehavior(BRAKE);
 
         outtakeSlideRight = hardwareMap.get(DcMotor.class, "outtakeSlideRight");
         outtakeSlideRight.setMode(STOP_AND_RESET_ENCODER);
-        outtakeSlideRight.setMode(RUN_USING_ENCODER);
+        outtakeSlideRight.setMode(RUN_WITHOUT_ENCODER);
         outtakeSlideRight.setZeroPowerBehavior(BRAKE);
         outtakeSlideRight.setDirection(REVERSE);
 
         outtakeSlideLeft = hardwareMap.get(DcMotor.class, "outtakeSlideLeft");
         outtakeSlideLeft.setMode(STOP_AND_RESET_ENCODER);
-        outtakeSlideLeft.setMode(RUN_USING_ENCODER);
+        outtakeSlideLeft.setMode(RUN_WITHOUT_ENCODER);
         outtakeSlideLeft.setZeroPowerBehavior(BRAKE);
 
 
@@ -478,10 +479,9 @@ public class TeleOpDrive extends LinearOpMode {
         // Translate by the robot's position in the field's coordinate system
         double xField = robot.x + objectRotatedX;
         double yField = robot.y + objectRotatedY;
-        
+
         // Return the result as an array
         return new Point(xField, yField);
-
     }
 
 }
