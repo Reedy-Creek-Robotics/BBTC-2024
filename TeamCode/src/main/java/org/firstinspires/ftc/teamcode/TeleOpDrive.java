@@ -229,6 +229,8 @@ public class TeleOpDrive extends LinearOpMode {
     }
 
     private void processTelemetry(){
+        telemetry.addData("closest alliace specific sample", alliaceVisionPipeline.centroid);
+        telemetry.addData("closest yellow sample", yellowVisionPipeline.centroid);
         telemetry.addData("Alliance", alliance == 0 ? "Red" : "Blue");
         telemetry.addData("Specimen State", specimenState);
         telemetry.update();
@@ -236,40 +238,34 @@ public class TeleOpDrive extends LinearOpMode {
 
     private void initHardware() {
         driveFrontLeft = hardwareMap.get(DcMotor.class, "driveFrontLeft");
-        driveFrontLeft.setMode(STOP_AND_RESET_ENCODER);
+        driveFrontLeft.setMode(RUN_WITHOUT_ENCODER);
         driveFrontLeft.setZeroPowerBehavior(BRAKE);
         driveFrontLeft.setDirection(REVERSE);
 
         driveFrontRight = hardwareMap.get(DcMotor.class, "driveFrontRight");
-        driveFrontRight.setMode(STOP_AND_RESET_ENCODER);
         driveFrontRight.setMode(RUN_WITHOUT_ENCODER);
         driveFrontRight.setZeroPowerBehavior(BRAKE);
 
         driveBackLeft = hardwareMap.get(DcMotor.class, "driveBackLeft");
-        driveBackLeft.setMode(STOP_AND_RESET_ENCODER);
         driveBackLeft.setMode(RUN_WITHOUT_ENCODER);
         driveBackLeft.setZeroPowerBehavior(BRAKE);
         driveBackLeft.setDirection(REVERSE);
 
         driveBackRight = hardwareMap.get(DcMotor.class, "driveBackRight");
-        driveBackRight.setMode(STOP_AND_RESET_ENCODER);
         driveBackRight.setMode(RUN_WITHOUT_ENCODER);
         driveBackRight.setZeroPowerBehavior(BRAKE);
 
         outtakeSlideRight = hardwareMap.get(DcMotor.class, "outtakeSlideRight");
-        outtakeSlideRight.setMode(STOP_AND_RESET_ENCODER);
-        outtakeSlideRight.setMode(RUN_WITHOUT_ENCODER);
+        outtakeSlideRight.setMode(RUN_USING_ENCODER);
         outtakeSlideRight.setZeroPowerBehavior(BRAKE);
-        outtakeSlideRight.setDirection(REVERSE);
 
         outtakeSlideLeft = hardwareMap.get(DcMotor.class, "outtakeSlideLeft");
-        outtakeSlideLeft.setMode(STOP_AND_RESET_ENCODER);
-        outtakeSlideLeft.setMode(RUN_WITHOUT_ENCODER);
+        outtakeSlideLeft.setMode(RUN_USING_ENCODER);
         outtakeSlideLeft.setZeroPowerBehavior(BRAKE);
+        outtakeSlideLeft.setDirection(REVERSE);
 
 
         pincher = hardwareMap.get(Servo.class, "pincher");
-        pincherOpen = false;
 
         intakeArm = hardwareMap.get(Servo.class, "intakeArm");
 
@@ -296,6 +292,7 @@ public class TeleOpDrive extends LinearOpMode {
                 intakeSlide,
                 basket,
                 pincher,
+                //claw,
                 telemetry,
                 this
         );
