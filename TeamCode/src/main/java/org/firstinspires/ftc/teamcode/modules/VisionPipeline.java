@@ -3,11 +3,8 @@ package org.firstinspires.ftc.teamcode.modules;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 
-import com.google.blocks.ftcrobotcontroller.runtime.obsolete.TfodCustomModelAccess;
-
 import org.firstinspires.ftc.robotcore.internal.camera.calibration.CameraCalibration;
 import org.firstinspires.ftc.vision.VisionProcessor;
-import org.opencv.calib3d.Calib3d;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
@@ -17,7 +14,6 @@ import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -25,18 +21,17 @@ import java.util.List;
 
 
 public class VisionPipeline implements VisionProcessor {
-
     final double width = 1920;
     final double height = 1080;
     final double screenCenterX = width / 2;
-    final double screenCenterY = height / 2;
+    final double screenCenterY = height*(0.125);
     final double distanceOffGround = 8.9;
     Mat hsvFrame = new Mat();
     Mat mask = new Mat();
     Mat redUpper = new Mat();
     Mat redLower = new Mat();
-    private final double lowerX =  0* width;
-    private final double upperX = 1 * width;
+    private final double lowerX = .25 * width;
+    private final double upperX = .75 * width;
     private final double lowerY = .5 * height;
     private final double upperY = 1.0 * height;
     public Point centroid = new Point();
@@ -67,9 +62,6 @@ public class VisionPipeline implements VisionProcessor {
     Scalar lowerBlue = new Scalar(90,75,168);
     Scalar upperBlue = new Scalar(118,255,255);
 
-    //
-    public double distanceForward = 0;
-
 
     public VisionPipeline(int color) {
         this.color = color;
@@ -86,7 +78,9 @@ public class VisionPipeline implements VisionProcessor {
 
     @Override
     public Object processFrame(Mat frame, long captureTimeNanos) {
+
         editingFrame = frame;
+//Calib3d.undistort(frame,editingFrame,cameraMatrix,distCoeffs);
         long startTime = System.nanoTime();
         List<List<Object>> samplesData = new ArrayList<>();
         preprocess(editingFrame);
@@ -105,6 +99,7 @@ public class VisionPipeline implements VisionProcessor {
                 for (int j = 0; j < approx.rows(); j++) {
                     points.add(approx.toList().get(j));
                 }
+
 
                 if (points.size() == 6) {
                     List<Point> longestLine = new ArrayList<>();
@@ -187,13 +182,24 @@ public class VisionPipeline implements VisionProcessor {
         List<Object> closest = new ArrayList<>();
         double shortestDistance = 0;
         for (int i = 0; i < samplesData.size(); i++) {
-                if((((Point) samplesData.get(i).get(0)).x)<7.5&&((Point) samplesData.get(i).get(0)).x<5.5 && ((Point) samplesData.get(i).get(0)).y<20){
-                    distanceForward = ((Point) samplesData.get(i).get(0)).y-5.03937;
-                    angleOfRotation = (double) samplesData.get(i).get(1);
+            Point point = (Point) samplesData.get(i).get(0);
+            if (i == 0) {
+                closest = samplesData.get(i);
 
+                shortestDistance = Math.hypot(position.get(0) - point.x, position.get(1) - point.y);
+            } else {
+                if (shortestDistance > Math.hypot(position.get(0) - point.x, position.get(1) - point.y)) {
+                    closest = samplesData.get(i);
+                    shortestDistance = Math.hypot(position.get(0) - point.x, position.get(1) - point.y);
                 }
+            }
+
         }
-        nothingThere = false;//samplesData.isEmpty();
+        nothingThere = samplesData.isEmpty();
+        if (closest.size() == 2) {
+            centroid = (Point) closest.get(0);
+            angleOfRotation = (double) closest.get(1);
+        }
         long endTime = System.nanoTime();
         timeTakenMili = (double) (endTime - startTime) / 1000000;
         return editingFrame;
@@ -210,22 +216,22 @@ public class VisionPipeline implements VisionProcessor {
 
 
         if(color==0) {
-            //reds
-            //lower Red
+//reds
+//lower Red
             Core.inRange(hsvFrame,lowerRedLow,lowerRedHigh,redLower);
-            //higher Red
+//higher Red
             Core.inRange(hsvFrame, upperRedLow,upperRedHigh,redUpper);
-            //combining both masks
+//combining both masks
             Core.bitwise_or(redUpper,redLower,mask);
 
         }else if(color==1){
-            //yellow
+//yellow
             Core.inRange(hsvFrame,lowerBlue,upperBlue,mask);
         } else if (color==2) {
-            //Yellow
+//Yellow
             Core.inRange(hsvFrame, lowerYellow, upperYellow, mask);
         }
-        //Scalars used to detect the lower red of the samples
+//Scalars used to detect the lower red of the samples
 
         Point anchorPoint = new Point(-1, -1);
         Imgproc.erode(mask, mask, Imgproc.getStructuringElement(
@@ -248,7 +254,9 @@ public class VisionPipeline implements VisionProcessor {
         double xRealWorld = Math.tan(Math.toRadians(xAngle)) * yRealWorld;
         if (xIsNegative)
             xRealWorld = -xRealWorld;
-        return  new Point(xRealWorld, yRealWorld);
+        return transformPosition(new Point(position.get(0), position.get(1)), position.get(2), new Point(xRealWorld, yRealWorld));
+
+
     }
 
     private Point transformPosition(Point robot, double degreesR, Point offset) {
@@ -264,24 +272,24 @@ public class VisionPipeline implements VisionProcessor {
          * (xField, yField): Object's position in the field's coordinate system
          */
 
-        // Convert degrees to radians
+// Convert degrees to radians
         double thetaR = Math.toRadians(degreesR);
 
-        // Create the rotation matrix based on robot's heading
+// Create the rotation matrix based on robot's heading
         double[][] rotationMatrix = new double[][]{
                 {Math.cos(thetaR), -Math.sin(thetaR)},
                 {Math.sin(thetaR), Math.cos(thetaR)}
         };
 
-        // Rotate the object's local coordinates relative to the robot
+// Rotate the object's local coordinates relative to the robot
         double objectRotatedX = rotationMatrix[0][0] * offset.x + rotationMatrix[0][1] * offset.y;
         double objectRotatedY = rotationMatrix[1][0] * offset.x + rotationMatrix[1][1] * offset.y;
 
-        // Translate by the robot's position in the field's coordinate system
+// Translate by the robot's position in the field's coordinate system
         double xField = robot.x + objectRotatedX;
         double yField = robot.y + objectRotatedY;
 
-        // Return the result as an array
+// Return the result as an array
         return new Point(xField, yField);
     }
 
