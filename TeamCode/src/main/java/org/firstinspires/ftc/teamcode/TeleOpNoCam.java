@@ -41,8 +41,6 @@ public class TeleOpNoCam extends LinearOpMode {
     double ly1;
     double lx1;
     double rx1;
-    double rotX;
-    double rotY;
     double pincherRotatorPos;
 
     Gamepad currentGamepad1 = new Gamepad();
@@ -52,16 +50,16 @@ public class TeleOpNoCam extends LinearOpMode {
     DcMotor driveFrontRight;
     DcMotor driveBackLeft;
     DcMotor driveBackRight;
-    DcMotor outtakeSlideRight; //
-    DcMotor outtakeSlideLeft; //
+    DcMotor outtakeSlideRight;
+    DcMotor outtakeSlideLeft;
 
-    Servo pincher; //
-    Servo intakeSlide; //
-    Servo intakeArm; //
-    Servo pincherRotator; //
-    Servo intakeRotator; //
-    Servo claw; //
-    Servo basket; //
+    Servo pincher;
+    Servo intakeSlide;
+    Servo intakeArm;
+    Servo pincherRotator;
+    Servo intakeRotator;
+    Servo claw;
+    Servo basket;
 
     Robot bot;
 
@@ -101,6 +99,7 @@ public class TeleOpNoCam extends LinearOpMode {
         driveBackRight.setZeroPowerBehavior(FLOAT);
         stop();
     }
+
     private void processDrivingRobot(){
         double denominator = Math.max(Math.abs(ly1) + Math.abs(lx1) + Math.abs(rx1), 1);
         double frontLeftPower = (ly1 + lx1 + rx1) / denominator;
