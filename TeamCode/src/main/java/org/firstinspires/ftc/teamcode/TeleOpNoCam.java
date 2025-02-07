@@ -12,6 +12,7 @@ import static org.firstinspires.ftc.teamcode.modules.Robot.OUTTAKE_SLIDE_HANG;
 
 import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.*;
 import static com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.BRAKE;
+import static com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.FLOAT;
 import static com.qualcomm.robotcore.hardware.DcMotorSimple.Direction.*;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
@@ -97,6 +98,10 @@ public class TeleOpNoCam extends LinearOpMode {
             processTelemetry();
 
         }
+        driveFrontLeft.setZeroPowerBehavior(FLOAT);
+        driveBackLeft.setZeroPowerBehavior(FLOAT);
+        driveFrontRight.setZeroPowerBehavior(FLOAT);
+        driveBackRight.setZeroPowerBehavior(FLOAT);
     }
     private void processDrivingRobot(){
         double denominator = Math.max(Math.abs(ly1) + Math.abs(lx1) + Math.abs(rx1), 1);
