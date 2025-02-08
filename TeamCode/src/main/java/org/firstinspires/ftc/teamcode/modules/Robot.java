@@ -28,10 +28,10 @@ public class Robot {
     LinearOpMode opMode;
 
     public static final double
-            PINCHER_CLOSED = .2,
-            PINCHER_OPEN = 0.5,
+            PINCHER_CLOSED = 0.72,
+            PINCHER_OPEN = 1.0,
             CLAW_CLOSED = 0.45,
-            CLAW_OPEN = 0,
+            CLAW_OPEN = 0.0,
             BASKET_UP = 0.82,
             BASKET_DOWN = 0.5,
             INTAKE_SLIDE_OUT = 0.472,

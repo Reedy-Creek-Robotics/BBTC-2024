@@ -125,10 +125,22 @@ public class TeleOpNoCam extends LinearOpMode {
             while(slideResetTimer.milliseconds() < 1000 && opModeIsActive());
             outtakeSlideLeft.setMode(STOP_AND_RESET_ENCODER);
             outtakeSlideRight.setMode(STOP_AND_RESET_ENCODER);
+            outtakeSlideLeft.setTargetPosition(50);
+            outtakeSlideRight.setTargetPosition(50);
+            outtakeSlideLeft.setMode(RUN_TO_POSITION);
+            outtakeSlideRight.setMode(RUN_TO_POSITION);
+            outtakeSlideLeft.setPower(1);
+            outtakeSlideRight.setPower(1);
+            while(outtakeSlideLeft.isBusy() && outtakeSlideRight.isBusy());
+            outtakeSlideLeft.setMode(STOP_AND_RESET_ENCODER);
+            outtakeSlideRight.setMode(STOP_AND_RESET_ENCODER);
         }
 
         if(gamepad1.left_bumper && buttonDebounce.milliseconds() > buttonDelay){
             clawOpen = !clawOpen;
+            if(!clawOpen){
+                bot.runIntake(RunStates.GRAB, 1);
+            }
             buttonDebounce.reset();
         }
 
