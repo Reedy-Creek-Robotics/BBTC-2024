@@ -17,7 +17,7 @@ import org.firstinspires.ftc.teamcode.RoadRunner.MecanumDrive;
 import org.firstinspires.ftc.teamcode.components.*;
 import org.opencv.core.Mat;
 
-@Autonomous
+@Autonomous(preselectTeleOp = "Tele-Op NO CAM")
 public class RedBasket extends LinearOpMode {
 
     @Override
@@ -42,11 +42,11 @@ public class RedBasket extends LinearOpMode {
                 .build();
 
         ParallelAction spikeGrab1 = new ParallelAction(
-                drive.actionBuilder(new Pose2d(-47, -47, Math.toRadians(225))).fresh()
+                drive.actionBuilder(new Pose2d(-47, -47, Math.toRadians(45))).fresh()
                         .setReversed(false)
-                        .lineToX(-46)
-                        .turnTo(Math.toRadians(100))
-                        .lineToY(-44)
+                        .lineToX(-45.5)
+                        .turnTo(Math.toRadians(90))
+                        .lineToY(-45.5)
                         .build(),
                 outtakeSlide.outtakeSlideDown());
 
@@ -60,8 +60,8 @@ public class RedBasket extends LinearOpMode {
         ParallelAction spikeGrab2 = new ParallelAction(
                 drive.actionBuilder(new Pose2d(-50, -50, Math.toRadians(45))).fresh()
                         .setReversed(false)
-                        .strafeToSplineHeading(new Vector2d(-44, -44), Math.toRadians(90))
-                        .strafeTo(new Vector2d(-59, -44))
+                        //.strafeToSplineHeading(new Vector2d(-44, -45), Math.toRadians(90))
+                        .strafeToSplineHeading(new Vector2d(-59, -43), Math.toRadians(90))
                         .build(),
                 outtakeSlide.outtakeSlideDown());
 
