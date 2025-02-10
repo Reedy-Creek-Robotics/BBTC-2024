@@ -46,7 +46,7 @@ public class RedBasket extends LinearOpMode {
                         .setReversed(false)
                         .lineToX(-45.5)
                         .turnTo(Math.toRadians(90))
-                        .lineToY(-45.5)
+                        .lineToY(-44.5)
                         .build(),
                 outtakeSlide.outtakeSlideDown());
 
@@ -55,24 +55,24 @@ public class RedBasket extends LinearOpMode {
                 .splineTo(new Vector2d(-54, -54), Math.toRadians(225))
                 .build();
 
-        
+
 
         ParallelAction spikeGrab2 = new ParallelAction(
-                drive.actionBuilder(new Pose2d(-50, -50, Math.toRadians(45))).fresh()
+                drive.actionBuilder(new Pose2d(-52.5, -50, Math.toRadians(45))).fresh()
                         .setReversed(false)
                         //.strafeToSplineHeading(new Vector2d(-44, -45), Math.toRadians(90))
-                        .strafeToSplineHeading(new Vector2d(-59, -43), Math.toRadians(90))
+                        .strafeToSplineHeading(new Vector2d(-61, -43), Math.toRadians(90))
                         .build(),
                 outtakeSlide.outtakeSlideDown());
 
-        
 
-        Action spikeScore2 = drive.actionBuilder(new Pose2d(-58, -39, Math.toRadians(90))).fresh()
+
+        Action spikeScore2 = drive.actionBuilder(new Pose2d(-54, -39, Math.toRadians(90))).fresh()
                 .setReversed(true)
                 .splineTo(new Vector2d(-54, -54), Math.toRadians(230))
                 .build();
 
-        
+
 
         ParallelAction trajEnd = new ParallelAction(
                 drive.actionBuilder(new Pose2d(-50, -50, Math.toRadians(45))).fresh()
@@ -142,7 +142,7 @@ public class RedBasket extends LinearOpMode {
                 pincherRotator.pincherRotatorTurned()
         );
 
-        
+
 
         SequentialAction outtakeSample1 = new SequentialAction(
                 outtakeSlide.outtakeSlideUp(),
@@ -160,7 +160,7 @@ public class RedBasket extends LinearOpMode {
                         .build(),
                 basket.basketDown());
 
-        
+
 
         SequentialAction outtakeSample2 = new SequentialAction(
                 outtakeSlide.outtakeSlideUp(),
@@ -179,7 +179,7 @@ public class RedBasket extends LinearOpMode {
                         .splineTo(new Vector2d(-50, -50), Math.toRadians(45)).build(),
                 basket.basketDown());
 
-        
+
 
         SequentialAction outtakeSample3 = new SequentialAction(
                 outtakeSlide.outtakeSlideUp(),
@@ -198,7 +198,7 @@ public class RedBasket extends LinearOpMode {
                         .build(),
                 basket.basketDown());
 
-        
+
 
         waitForStart();
 

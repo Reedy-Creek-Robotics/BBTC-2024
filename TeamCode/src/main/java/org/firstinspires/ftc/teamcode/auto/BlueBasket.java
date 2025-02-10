@@ -44,13 +44,13 @@ public class BlueBasket extends LinearOpMode {
 
         Action preloadScore = drive.actionBuilder(initialPose).endTrajectory().fresh()
                 .setReversed(true)
-                .splineTo(new Vector2d(54, 54), Math.toRadians(45))
+                .splineTo(new Vector2d(52, 54), Math.toRadians(45))
                 .build();
 
         ParallelAction spikeGrab1 = new ParallelAction(
                 drive.actionBuilder(new Pose2d(50, 50, Math.toRadians(225))).fresh()
                 .setReversed(false)
-                .splineTo(new Vector2d(46, 43), Math.toRadians(275))
+                .splineTo(new Vector2d(46.5, 44), Math.toRadians(275))
                 .build(),
                 outtakeSlide.outtakeSlideDown());
 
@@ -64,7 +64,7 @@ public class BlueBasket extends LinearOpMode {
                         .setReversed(false)
                         /*.splineTo(new Vector2d(47, 44), Math.toRadians(270))
                         .strafeTo(new Vector2d(58, 44))*/
-                        .strafeToSplineHeading(new Vector2d(59, 41), Math.toRadians(270))
+                        .strafeToSplineHeading(new Vector2d(61, 43), Math.toRadians(270))
                         .build(),
                 outtakeSlide.outtakeSlideDown());
 
@@ -134,7 +134,7 @@ public class BlueBasket extends LinearOpMode {
 
         SequentialAction outtakeSample1 = new SequentialAction(
                 outtakeSlide.outtakeSlideUp(),
-                drive.actionBuilder(new Pose2d(54, 54, Math.toRadians(225)))
+                drive.actionBuilder(new Pose2d(52, 54, Math.toRadians(225)))
                         .setReversed(true)
                         .strafeToSplineHeading(new Vector2d(56, 56), Math.toRadians(225))
                         .build(),
