@@ -15,6 +15,7 @@ import static com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.BRAKE;
 import static com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.FLOAT;
 import static com.qualcomm.robotcore.hardware.DcMotorSimple.Direction.*;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -27,8 +28,11 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.modules.RunStates;
 
+@Config
 @TeleOp(name = "Tele-Op NO CAM")
 public class TeleOpNoCam extends LinearOpMode {
+    public double MIN_SPEED = 0.5;
+
     ElapsedTime buttonDebounce;
     ElapsedTime timer;
     ElapsedTime transferTimer;
@@ -102,10 +106,13 @@ public class TeleOpNoCam extends LinearOpMode {
 
     private void processDrivingRobot(){
         double denominator = Math.max(Math.abs(ly1) + Math.abs(lx1) + Math.abs(rx1), 1);
-        double frontLeftPower = (ly1 + lx1 + rx1) / denominator;
-        double backLeftPower = (ly1 - lx1 + rx1) / denominator;
-        double frontRightPower = (ly1 - lx1 - rx1) / denominator;
-        double backRightPower = (ly1 + lx1 - rx1) / denominator;
+
+        double powerFactor = 1 - (outtakeSlideLeft.getCurrentPosition() * ((1 - MIN_SPEED) / 3200));
+
+        double frontLeftPower = ((ly1 + lx1 + rx1) / denominator) * powerFactor;
+        double backLeftPower = ((ly1 - lx1 + rx1) / denominator) * powerFactor;
+        double frontRightPower = ((ly1 - lx1 - rx1) / denominator) * powerFactor;
+        double backRightPower = ((ly1 + lx1 - rx1) / denominator) * powerFactor;
 
         driveFrontLeft.setPower(frontLeftPower);
         driveBackLeft.setPower(backLeftPower);
@@ -172,8 +179,6 @@ public class TeleOpNoCam extends LinearOpMode {
             transferTimer.reset();
             buttonDebounce.reset();
         }
-
-
 
         if(gamepad1.dpad_left && buttonDebounce.milliseconds() > 100){
             pincherRotatorPos = 0.35;

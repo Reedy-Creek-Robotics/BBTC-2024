@@ -34,8 +34,8 @@ public class Robot {
             CLAW_OPEN = 0.0,
             BASKET_UP = 0.82,
             BASKET_DOWN = 0.5,
-            INTAKE_SLIDE_OUT = 0.472,
-            INTAKE_SLIDE_IN = 0.83;
+            INTAKE_SLIDE_OUT = 0.1,
+            INTAKE_SLIDE_IN = 0.5;
     public static final int
             OUTTAKE_SLIDE_PREP_HANG = 1900,
             OUTTAKE_SLIDE_HANG = 800,

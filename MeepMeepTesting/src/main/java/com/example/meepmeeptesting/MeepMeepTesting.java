@@ -18,9 +18,10 @@ public class MeepMeepTesting {
                     WIDTH = 17.75,
                    HEIGHT = 16;
 
-
-
     public static void main(String[] args) {
+        Vector2d spike1 = new Vector2d(48, 26);
+        Vector2d spike2 = new Vector2d(58, 26);
+        Vector2d spike3 = new Vector2d(68, 26);
         MeepMeep meepMeep = new MeepMeep(700, 30);
 
 
@@ -29,83 +30,11 @@ public class MeepMeepTesting {
                 // Set bot constraints: maxVel, maxAccel, maxAngVel, maxAngAccel, track width
                 .setConstraints(MAX_VEl, MAX_ACCEL, MAX_ANG_VEL, MAX_ANG_ACCEL, TRACK_WIDTH)
                 .setDimensions(WIDTH, HEIGHT)
-                .setStartPose(new Pose2d(23-(WIDTH/2), 72-(HEIGHT/2), Math.toRadians(90)))
+                .setStartPose(new Pose2d(57, 57, Math.toRadians(45)))
                 .build();
 
-        BlueBasket.runAction(BlueBasket.getDrive().actionBuilder(new Pose2d(23-(WIDTH/2), 72-(HEIGHT/2), Math.toRadians(90)))
+        BlueBasket.runAction(BlueBasket.getDrive().actionBuilder(new Pose2d(57, 57, Math.toRadians(225)))
 
-                // <preloadScore>
-                .setReversed(true)
-                .splineTo(new Vector2d(54, 54), Math.toRadians(45))
-                // </preloadScore>
-
-                .waitSeconds(1)
-
-
-
-                .waitSeconds(1)
-
-                /*// <spikeGrab1>
-                .setReversed(false)
-                .splineTo(new Vector2d(48, 39), Math.toRadians(270))
-                // </spikeGrab1>
-
-                .waitSeconds(1)
-
-                // <spikeScore1>
-                .setReversed(true)
-                .splineTo(new Vector2d(54, 54), Math.toRadians(45))
-                // </spikeScore1>
-
-                .waitSeconds(1)
-
-                // <outtakeSample>
-                .setReversed(true)
-                .splineTo(new Vector2d(55, 55), Math.toRadians(45))
-                // </outtakeSample>
-
-                .waitSeconds(1)
-
-                // <spikeGrab2>
-                .setReversed(false)
-                .splineTo(new Vector2d(58, 39), Math.toRadians(270))
-                // </spikeGrab2>
-
-                .waitSeconds(1)
-
-                // <spikeScore2>
-                .setReversed(true)
-                .splineTo(new Vector2d(54, 54), Math.toRadians(45))
-                // </spikeScore2>
-
-                .waitSeconds(1)
-
-                // <outtakeSample>
-                .setReversed(true)
-                .splineTo(new Vector2d(55, 55), Math.toRadians(45))
-                // </outtakeSample>
-
-                .waitSeconds(1)
-
-                .waitSeconds(1)*/
-
-                .build());
-
-        BlueBasket.runAction(BlueBasket.getDrive().actionBuilder(BlueBasket.getPose())
-                // <outtakeSample>
-                .setReversed(true)
-                .splineTo(new Vector2d(55, 55), Math.toRadians(45))
-                // </outtakeSample>
-                .build());
-
-        BlueBasket.runAction(BlueBasket.getDrive().actionBuilder(BlueBasket.getPose())
-                // <trajEnd>
-                .setReversed(false)
-                .splineTo(new Vector2d(48, 24), Math.toRadians(270))
-                .turn(Math.toRadians(180))
-                .setReversed(true)
-                .splineTo(new Vector2d(20, 10), Math.toRadians(180))
-                // </trajEnd>
                 .build());
 
         RoadRunnerBotEntity BlueObservation = new DefaultBotBuilder(meepMeep)
@@ -156,9 +85,9 @@ public class MeepMeepTesting {
                 .setDarkMode(false)
                 .setAxesInterval(24)
                 .setBackgroundAlpha(0.95f)
-                //.addEntity(BlueBasket)
+                .addEntity(BlueBasket)
                 //.addEntity(BlueObservation)
-                .addEntity(RedBasket)
+                //.addEntity(RedBasket)
                 //.addEntity(RedObservation)
                 .start();
     }
