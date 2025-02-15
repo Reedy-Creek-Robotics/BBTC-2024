@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode.modules;
 public enum RunStates {
     // Sets the Intake just in front of the bot, so slides can lift safely
     DEFAULT(
-            0.46,
+            0.45,
             0.63,
             0.02,
             0.75,
@@ -14,7 +14,7 @@ public enum RunStates {
     ),
     // Sit in front of the samples, prepared to pick up.
     PICKING(
-            0.5,
+            0.45,
             -1,
             0.1,
             -1,
@@ -25,7 +25,7 @@ public enum RunStates {
     ),
     // Grab the sample.
     GRAB(
-            0.54,
+            0.5,
             -1,
             0,
             -1,
@@ -36,7 +36,7 @@ public enum RunStates {
     ),
     // Hold the sample above the transfer bucket
     HOLD(
-            0.34,
+            0.3,
             0.28,
             1,
             .73,
@@ -48,7 +48,7 @@ public enum RunStates {
     // Drop the sample into the transfer bucket.
 
     TRANSFER(
-            0.34,
+            0.3,
             .28,
             1,
             .73,

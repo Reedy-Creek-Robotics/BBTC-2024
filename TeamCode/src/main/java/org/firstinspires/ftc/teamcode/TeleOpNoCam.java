@@ -271,7 +271,8 @@ public class TeleOpNoCam extends LinearOpMode {
         telemetry.addData("Intake Out", intakeSlideOut);
         telemetry.addData("Outtake Up", outtakeSlideUp);
         telemetry.addData("Pincher Open", clawOpen);
-        telemetry.addData("Outtake Slide Pos", outtakeSlideLeft.getCurrentPosition());
+        telemetry.addData("Left Slide", outtakeSlideLeft.getCurrentPosition());
+        telemetry.addData("Right Slide", outtakeSlideRight.getCurrentPosition());
         telemetry.addData("Pincher Rotator Position", pincherRotatorPos);
         telemetry.addData("hangPresses", hangPresses);
         telemetry.update();
