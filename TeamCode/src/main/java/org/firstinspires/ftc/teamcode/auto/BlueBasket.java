@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode.auto;
 
-import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
@@ -10,18 +9,21 @@ import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
-import org.firstinspires.ftc.teamcode.RoadRunner.Localizer;
 import org.firstinspires.ftc.teamcode.RoadRunner.MecanumDrive;
 import org.firstinspires.ftc.teamcode.components.*;
 
 @Autonomous(preselectTeleOp = "Tele-Op NO CAM")
 public class BlueBasket extends LinearOpMode {
 
+    Vector2d spike1 = new Vector2d(48, 26);
+    Vector2d spike2 = new Vector2d(58, 26);
+    Vector2d spike3 = new Vector2d(68, 26);
+
     @Override
     public void runOpMode() throws InterruptedException {
         Pose2d initialPose = new Pose2d(14.125, 64, Math.toRadians(90));
         MecanumDrive drive = new MecanumDrive(hardwareMap, initialPose);
-        
+
         OuttakeSlide outtakeSlide = new OuttakeSlide(hardwareMap);
         Basket basket = new Basket(hardwareMap);
         Pincher pincher = new Pincher(hardwareMap);
@@ -31,61 +33,40 @@ public class BlueBasket extends LinearOpMode {
         PincherRotator pincherRotator = new PincherRotator(hardwareMap);
         IntakeRotator intakeRotator = new IntakeRotator(hardwareMap);
 
-        SequentialAction endServoPositions = new SequentialAction(
-                new SleepAction(1),
-                new ParallelAction(
-                        intakeSlide.intakeSlideIn(),
-                        intakeRotator.intakeRotatorDefault(),
-                        intakeArm.intakeArmDefault(),
-                        outtakeSlide.outtakeSlideDown()
-                ));
-
         Actions.runBlocking(basket.basketDown());
 
-        Action preloadScore = drive.actionBuilder(initialPose).endTrajectory().fresh()
-                .setReversed(true)
-                .splineTo(new Vector2d(52, 54), Math.toRadians(45))
-                .build();
+        ParallelAction preloadScore = new ParallelAction(
+                drive.actionBuilder(initialPose).endTrajectory()
+                        .setReversed(true)
+                        .splineTo(new Vector2d(57, 57), Math.toRadians(65))
+                        .build(),
+                outtakeSlide.outtakeSlideUp()
+        );
+
+        SequentialAction outtakeSample1 = new SequentialAction(
+                outtakeSlide.outtakeSlideUp(),
+                basket.basketUp(),
+                intakeSlide.intakeSlideOut(),
+                intakeArm.intakeArmDefault(),
+                pincherRotator.pincherRotatorTurned(),
+                intakeRotator.intakeRotatorPicking(),
+                pincher.pincherOpen(),
+                new SleepAction(0.75),
+                basket.basketDown()
+        );
 
         ParallelAction spikeGrab1 = new ParallelAction(
-                drive.actionBuilder(new Pose2d(50, 50, Math.toRadians(225))).fresh()
-                .setReversed(false)
-                .splineTo(new Vector2d(46.5, 44), Math.toRadians(275))
-                .build(),
-                outtakeSlide.outtakeSlideDown());
+                new SequentialAction(
+                        drive.actionBuilder(new Pose2d(57, 57, Math.toRadians(245)))
+                                .setReversed(false)
+                                .strafeToSplineHeading(new Vector2d(45, spike1.y+19), Math.toRadians(270))
+                                .build()),
+                new SequentialAction(
+                        new SleepAction(0.4),
+                        outtakeSlide.outtakeSlideDown()
+                )
+        );
 
-        Action spikeScore1 = drive.actionBuilder(new Pose2d(47, 39, Math.toRadians(270))).fresh()
-                .setReversed(true)
-                .splineTo(new Vector2d(54, 54), Math.toRadians(45))
-                .build();
-
-        ParallelAction spikeGrab2 = new ParallelAction(
-                        drive.actionBuilder(new Pose2d(50, 50, Math.toRadians(225))).fresh()
-                        .setReversed(false)
-                        /*.splineTo(new Vector2d(47, 44), Math.toRadians(270))
-                        .strafeTo(new Vector2d(58, 44))*/
-                        .strafeToSplineHeading(new Vector2d(61, 43), Math.toRadians(270))
-                        .build(),
-                outtakeSlide.outtakeSlideDown());
-
-        Action spikeScore2 = drive.actionBuilder(new Pose2d(58, 39, Math.toRadians(270))).fresh()
-                .setReversed(true)
-                .splineTo(new Vector2d(54, 54), Math.toRadians(50))
-                .build();
-
-        ParallelAction trajEnd = new ParallelAction(
-                drive.actionBuilder(new Pose2d(50, 50, Math.toRadians(225))).fresh()
-                        .setReversed(false)
-                        .splineTo(new Vector2d(48, 24), Math.toRadians(270))
-                        .turn(Math.toRadians(180))
-                        .setReversed(true)
-                        .splineTo(new Vector2d(20, 10), Math.toRadians(180))
-                        .build(),
-                outtakeSlide.outtakeSlideDown()
-                );
-
-        if (isStopRequested()) return;
-        
         SequentialAction intakeSample1 = new SequentialAction(
                 intakeSlide.intakeSlideOut(),
                 intakeArm.intakeArmGrab(),
@@ -109,11 +90,103 @@ public class BlueBasket extends LinearOpMode {
                 pincherRotator.pincherRotatorTurned()
         );
 
+        ParallelAction spikeScore1 = new ParallelAction(
+                drive.actionBuilder(new Pose2d(45, spike1.y+19, Math.toRadians(270)))
+                        .setReversed(true)
+                        .splineTo(new Vector2d(54, 54), Math.toRadians(45))
+                        .build(),
+                outtakeSlide.outtakeSlideUp()
+        );
+
+        SequentialAction outtakeSample2 = new SequentialAction(
+                outtakeSlide.outtakeSlideUp(),
+                drive.actionBuilder(new Pose2d(54, 54, Math.toRadians(225)))
+                        .setReversed(true)
+                        .strafeToSplineHeading(new Vector2d(57, 57), Math.toRadians(225))
+                        .build(),
+                basket.basketUp(),
+                intakeSlide.intakeSlideOut(),
+                intakeArm.intakeArmDefault(),
+                pincherRotator.pincherRotatorTurned(),
+                intakeRotator.intakeRotatorPicking(),
+                pincher.pincherOpen(),
+                new SleepAction(0.75),
+                basket.basketDown()
+        );
+
+        ParallelAction spikeGrab2 = new ParallelAction(
+                drive.actionBuilder(new Pose2d(57, 57, Math.toRadians(225)))
+                        .setReversed(false)
+                        .strafeToSplineHeading(new Vector2d(56, spike2.y+20.5), Math.toRadians(270))
+                        .build(),
+                new SequentialAction(
+                        new SleepAction(0.4),
+                        outtakeSlide.outtakeSlideDown()
+                )
+        );
+
         SequentialAction intakeSample2 = new SequentialAction(
                 intakeSlide.intakeSlideOut(),
                 intakeArm.intakeArmGrab(),
                 intakeRotator.intakeRotatorGrab(),
                 pincherRotator.pincherRotatorTurned(),
+                pincher.pincherOpen(),
+                new SleepAction(0.5),
+                pincher.pincherClose(),
+                new SleepAction(0.5),
+                intakeSlide.intakeSlideIn(),
+                intakeArm.intakeArmTransfer(),
+                intakeRotator.intakeRotatorTransfer(),
+                pincherRotator.pincherRotatorTurned(),
+                new SleepAction(1.5),
+                pincher.pincherOpen(),
+                new SleepAction(0.5),
+                intakeArm.intakeArmDefault(),
+                intakeRotator.intakeRotatorDefault(),
+                pincherRotator.pincherRotatorTurned()
+        );
+
+        ParallelAction spikeScore2 = new ParallelAction(
+                drive.actionBuilder(new Pose2d(56, spike2.y+20.5, Math.toRadians(270)))
+                        .setReversed(true)
+                        .splineTo(new Vector2d(54, 54), Math.toRadians(45))
+                        .build(),
+                outtakeSlide.outtakeSlideUp()
+        );
+
+        SequentialAction outtakeSample3 = new SequentialAction(
+                outtakeSlide.outtakeSlideUp(),
+                drive.actionBuilder(new Pose2d(54, 54, Math.toRadians(225)))
+                        .setReversed(true)
+                        .strafeToSplineHeading(new Vector2d(57, 57), Math.toRadians(225))
+                        .build(),
+                basket.basketUp(),
+                intakeSlide.intakeSlideOut(),
+                intakeArm.intakeArmDefault(),
+                pincherRotator.pincherRotatorLine(),
+                intakeRotator.intakeRotatorPicking(),
+                pincher.pincherOpen(),
+                new SleepAction(0.75),
+                basket.basketDown()
+        );
+
+        ParallelAction spikeGrab3 = new ParallelAction(
+                drive.actionBuilder(new Pose2d(57, 57, Math.toRadians(225)))
+                        .setReversed(false)
+                        .splineTo(new Vector2d(40, 26), Math.toRadians(270))
+                        .turnTo(Math.toRadians(0))
+                        .strafeToSplineHeading(new Vector2d(spike3.x+10, 26), Math.toRadians(0))
+                        .build(),
+                new SequentialAction(
+                        new SleepAction(0.4),
+                        outtakeSlide.outtakeSlideDown()
+                ));
+
+        SequentialAction intakeSample3 = new SequentialAction(
+                intakeSlide.intakeSlideOut(),
+                intakeArm.intakeArmGrab(),
+                intakeRotator.intakeRotatorGrab(),
+                pincherRotator.pincherRotatorLine(),
                 pincher.pincherOpen(),
                 new SleepAction(0.5),
                 pincher.pincherClose(),
@@ -132,57 +205,57 @@ public class BlueBasket extends LinearOpMode {
                 pincherRotator.pincherRotatorTurned()
         );
 
-        SequentialAction outtakeSample1 = new SequentialAction(
-                outtakeSlide.outtakeSlideUp(),
-                drive.actionBuilder(new Pose2d(52, 54, Math.toRadians(225)))
+        ParallelAction spikeScore3 = new ParallelAction(
+                drive.actionBuilder(new Pose2d(spike3.x-19, 26, Math.toRadians(270)))
                         .setReversed(true)
-                        .strafeToSplineHeading(new Vector2d(56, 56), Math.toRadians(225))
+                        .splineTo(new Vector2d(54, 54), Math.toRadians(45))
                         .build(),
-                basket.basketUp(),
-                intakeSlide.intakeSlideOut(),
-                intakeArm.intakeArmDefault(),
-                intakeRotator.intakeRotatorPicking(),
-                pincher.pincherOpen(),
-                new SleepAction(0.75),
-                drive.actionBuilder(new Pose2d(55, 55, Math.toRadians(225)))
-                .splineTo(new Vector2d(50, 50), Math.toRadians(225))
-                .build(),
-                basket.basketDown());
+                outtakeSlide.outtakeSlideUp()
+        );
 
-
-        SequentialAction outtakeSample2 = new SequentialAction(
+        SequentialAction outtakeSample4 = new SequentialAction(
                 outtakeSlide.outtakeSlideUp(),
                 drive.actionBuilder(new Pose2d(54, 54, Math.toRadians(225)))
                         .setReversed(true)
-                        .strafeToSplineHeading(new Vector2d(56, 56), Math.toRadians(225))
+                        .splineTo(new Vector2d(56, 56), Math.toRadians(235))
                         .build(),
                 basket.basketUp(),
                 intakeSlide.intakeSlideOut(),
                 intakeArm.intakeArmDefault(),
+                pincherRotator.pincherRotatorTurned(),
                 intakeRotator.intakeRotatorPicking(),
                 pincher.pincherOpen(),
                 new SleepAction(0.75),
+                basket.basketDown()
+        );
 
-                drive.actionBuilder(new Pose2d(55, 55, Math.toRadians(225)))
-                    .splineTo(new Vector2d(50, 50), Math.toRadians(225)).build(),
-                basket.basketDown());
+        SequentialAction endPositions = new SequentialAction(
+                drive.actionBuilder(new Pose2d(56, 56, Math.toRadians(235)))
+                        .splineTo(new Vector2d(52, 52), Math.toRadians(235))
+                        .build(),
+                intakeSlide.intakeSlideIn(),
+                intakeRotator.intakeRotatorDefault(),
+                intakeArm.intakeArmDefault()
 
-        SequentialAction outtakeSample3 = new SequentialAction(
-                outtakeSlide.outtakeSlideUp(),
-                drive.actionBuilder(new Pose2d(54, 54, Math.toRadians(225)))
+        );
+
+        ParallelAction levelOnePark = new ParallelAction(
+                new SequentialAction(
+                        new SleepAction(0.2),
+                        outtakeSlide.outtakeSlidePark()
+                ),
+                drive.actionBuilder(new Pose2d(52, 52, Math.toRadians(235)))
+                        .splineTo(new Vector2d(48, 26), Math.toRadians(270))
+                        .turnTo(Math.toRadians(90))
                         .setReversed(true)
-                        .strafeToSplineHeading(new Vector2d(56, 56), Math.toRadians(225))
-                        .build(),
-                basket.basketUp(),
-                intakeSlide.intakeSlideOut(),
-                intakeArm.intakeArmDefault(),
-                intakeRotator.intakeRotatorPicking(),
-                pincher.pincherOpen(),
-                new SleepAction(0.75),
-                        drive.actionBuilder(new Pose2d(55, 55, Math.toRadians(225)))
-                                .splineTo(new Vector2d(50, 50), Math.toRadians(250))
-                                .build(),
-                        basket.basketDown());
+                        .splineTo(new Vector2d(26, 10), Math.toRadians(180))
+                        .build()
+        );
+
+        telemetry.addLine("READY");
+        telemetry.update();
+
+        if (isStopRequested()) return;
 
         waitForStart();
 
@@ -198,8 +271,12 @@ public class BlueBasket extends LinearOpMode {
                         intakeSample2,
                         spikeScore2,
                         outtakeSample3,
-                        endServoPositions/*,
-                        trajEnd*/
+                        /*spikeGrab3,
+                        intakeSample3,
+                        spikeScore3,
+                        outtakeSample4,*/
+                        endPositions,
+                        levelOnePark
                 )
         );
     }

@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.teamcode.components.OuttakeSlide;
 import org.firstinspires.ftc.teamcode.modules.Robot;
 import static org.firstinspires.ftc.teamcode.modules.Robot.*;
 import static org.firstinspires.ftc.teamcode.modules.Robot.BASKET_DOWN;
@@ -122,6 +123,19 @@ public class TeleOpNoCam extends LinearOpMode {
 
     private void processControl() {
 
+        if(gamepad1.left_trigger > 0.5 && gamepad1.right_trigger > 0.5){
+            outtakeSlideLeft.setTargetPosition(100);
+            outtakeSlideRight.setTargetPosition(100);
+            outtakeSlideLeft.setMode(RUN_TO_POSITION);
+            outtakeSlideRight.setMode(RUN_TO_POSITION);
+            outtakeSlideLeft.setPower(0.5);
+            outtakeSlideRight.setPower(0.5);
+            ElapsedTime basketKickTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+            while(basketKickTimer.milliseconds() < 250);
+            basket.setPosition(0);
+            while(basketKickTimer.milliseconds() < 400);
+            basket.setPosition(0.5);
+        }
 
         if (gamepad1.back) {
             outtakeSlideLeft.setMode(RUN_USING_ENCODER);

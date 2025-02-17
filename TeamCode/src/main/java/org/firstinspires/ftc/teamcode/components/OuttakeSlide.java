@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.components;
 
+import static com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.BRAKE;
+
 import androidx.annotation.NonNull;
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
@@ -17,14 +19,44 @@ public class OuttakeSlide {
             outtakeSlideRight = hardwareMap.get(DcMotor.class, "outtakeSlideRight");
             outtakeSlideRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             outtakeSlideRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            outtakeSlideRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            outtakeSlideRight.setZeroPowerBehavior(BRAKE);
             outtakeSlideRight.setDirection(DcMotor.Direction.FORWARD);
 
             outtakeSlideLeft = hardwareMap.get(DcMotor.class, "outtakeSlideLeft");
             outtakeSlideLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             outtakeSlideLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            outtakeSlideLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            outtakeSlideLeft.setZeroPowerBehavior(BRAKE);
             outtakeSlideLeft.setDirection(DcMotor.Direction.REVERSE);
+        }
+
+        public class OuttakeSlidePark implements Action {
+            private boolean initialized = false;
+
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet){
+                if(!initialized){
+                    outtakeSlideLeft.setPower(-1);
+                    outtakeSlideRight.setPower(-1);
+                    initialized = true;
+                }
+
+                double pos = (outtakeSlideLeft.getCurrentPosition() + outtakeSlideRight.getCurrentPosition()) / 2;
+                packet.put("Outtake Slide Pos", pos);
+
+                if(pos > Robot.OUTTAKE_SLIDE_PARK){
+                    return true;
+                } else {
+                    outtakeSlideLeft.setZeroPowerBehavior(BRAKE);
+                    outtakeSlideRight.setZeroPowerBehavior(BRAKE);
+                    outtakeSlideLeft.setPower(0);
+                    outtakeSlideRight.setPower(0);
+                    return false;
+                }
+            }
+        }
+
+        public Action outtakeSlidePark(){
+            return new OuttakeSlidePark();
         }
 
         public class OuttakeSlideUp implements Action {

@@ -40,7 +40,8 @@ public class Robot {
             OUTTAKE_SLIDE_PREP_HANG = 1900,
             OUTTAKE_SLIDE_HANG = 800,
             OUTTAKE_SLIDE_UP = 3200,
-            OUTTAKE_SLIDE_DOWN = 100;
+            OUTTAKE_SLIDE_DOWN = 100,
+            OUTTAKE_SLIDE_PARK = 644;
 
     public Robot(
             DcMotor driveFrontLeft,

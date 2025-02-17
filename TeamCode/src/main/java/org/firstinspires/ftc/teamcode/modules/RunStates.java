@@ -36,7 +36,7 @@ public enum RunStates {
     ),
     // Hold the sample above the transfer bucket
     HOLD(
-            0.3,
+            0.26,
             0.28,
             1,
             .73,
@@ -48,7 +48,7 @@ public enum RunStates {
     // Drop the sample into the transfer bucket.
 
     TRANSFER(
-            0.3,
+            0.26,
             .28,
             1,
             .73,
